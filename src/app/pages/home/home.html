@@ -1,6 +1,17 @@
 <section class="home">
-  <h1>Book a doctor's appointment</h1>
-  <p>Find a doctor by specialization, pick a free slot and book in a few clicks.</p>
+  @if (user(); as user) {
+    <h1 data-testid="welcome">Welcome, {{ user.name }}</h1>
+    <p>
+      You are logged in as <strong>{{ user.role.toLowerCase() }}</strong>.
+    </p>
+  } @else {
+    <h1>Book a doctor's appointment</h1>
+    <p>Find a doctor by specialization, pick a free slot and book in a few clicks.</p>
+    <p>
+      <a routerLink="/login">Log in</a> or <a routerLink="/register">create an account</a> to get
+      started.
+    </p>
+  }
 
   <p class="status" role="status">
     API status:

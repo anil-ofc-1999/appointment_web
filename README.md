@@ -46,11 +46,42 @@ port 3000 (no CORS setup needed in development).
 | `npm run format`     | Format all files with Prettier                     |
 | `npm run build`      | Production build to `dist/`                        |
 | `npm run check`      | lint + format check + tests + build (same as CI)   |
+| `npm run e2e`        | End-to-end tests (Playwright, real API + database) |
+| `npm run e2e:headed` | E2E tests in a visible browser window              |
+| `npm run e2e:report` | Open the HTML report of the last E2E run           |
 
 A **pre-commit hook** (`.githooks/pre-commit`, enabled by `npm install`) runs
 `npm run check` and blocks the commit if anything fails.
 
+## Tests
+
+| Layer      | Tool                | Where              | What                                                         |
+| ---------- | ------------------- | ------------------ | ------------------------------------------------------------ |
+| Unit       | Vitest (`ng test`)  | `src/**/*.spec.ts` | Validators, auth service, interceptor, guards, pages (+ / −) |
+| End-to-end | Playwright (`e2e/`) | `e2e/*.spec.ts`    | Real browser → Angular → API → PostgreSQL, desktop + mobile  |
+
+### Running the E2E tests
+
+Needs: PostgreSQL running, and `appointment_node_API` next to this folder with its `.env`
+(override the location with `API_DIR`). First time only: `npx playwright install chromium`.
+
+```powershell
+npm run e2e
+```
+
+Playwright starts its **own** API on port 3100 and web server on port 4300, so it does not
+clash with `npm run dev` / `npm start`. Test users are always `e2e-*@example.com` and are
+deleted before and after the run — seed data is never touched.
+E2E is not in CI yet (it needs the API repo and a database in the same job).
+
 ## Status
 
-Foundation done: app shell, API health check, tooling and CI.
-Next: the screens from REQUIREMENTS §8 (login/register first).
+| Screen (REQUIREMENTS §8)     | Status  |
+| ---------------------------- | ------- |
+| 1. Login / Register          | Done    |
+| 2. Doctor search             | Next    |
+| 3. Doctor detail + slot grid | Planned |
+| 4. Booking confirmation      | Planned |
+| 5. My Appointments           | Planned |
+| 6. Doctor dashboard          | Planned |
+| 7. Admin panel               | Planned |

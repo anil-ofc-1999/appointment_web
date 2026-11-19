@@ -1,22 +1,60 @@
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 
+import { loginResponse } from '../testing/fake-jwt';
 import { App } from './app';
+import { AuthService } from './core/auth/auth.service';
 
-describe('App', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [App],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
-    }).compileComponents();
+async function render(loggedIn: boolean) {
+  localStorage.clear();
+  await TestBed.configureTestingModule({
+    imports: [App],
+    providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+  }).compileComponents();
+  if (loggedIn) {
+    TestBed.inject(AuthService).login({ email: 'a@example.com', password: 'x' }).subscribe();
+    TestBed.inject(HttpTestingController).expectOne('/api/v1/auth/login').flush(loginResponse());
+  }
+  const fixture = TestBed.createComponent(App);
+  await fixture.whenStable();
+  return { fixture, el: fixture.nativeElement as HTMLElement };
+}
+
+afterEach(() => localStorage.clear());
+
+describe('App shell', () => {
+  it('renders the brand link in the top bar', async () => {
+    const { el } = await render(false);
+
+    expect(el.querySelector('.brand')?.textContent).toContain('Doctor Appointments');
   });
 
-  it('renders the brand link in the top bar', async () => {
-    const fixture = TestBed.createComponent(App);
+  it('shows Log in and Register links to guests', async () => {
+    const { el } = await render(false);
+
+    expect(el.querySelector('a[href="/login"]')).not.toBeNull();
+    expect(el.querySelector('a[href="/register"]')).not.toBeNull();
+    expect(el.querySelector('[data-testid="current-user"]')).toBeNull();
+  });
+
+  it('shows the user name and a Log out button when logged in', async () => {
+    const { el } = await render(true);
+
+    expect(el.querySelector('[data-testid="current-user"]')?.textContent).toContain('Asha Reddy');
+    expect(el.querySelector('a[href="/login"]')).toBeNull();
+  });
+
+  it('Log out clears the session and goes to the login page', async () => {
+    const { fixture, el } = await render(true);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    el.querySelector<HTMLButtonElement>('.nav-button')!.click();
     await fixture.whenStable();
-    const brand = (fixture.nativeElement as HTMLElement).querySelector('.brand');
-    expect(brand?.textContent).toContain('Doctor Appointments');
+
+    expect(TestBed.inject(AuthService).isLoggedIn()).toBe(false);
+    expect(navigate).toHaveBeenCalledWith(['/login']);
+    expect(el.querySelector('a[href="/login"]')).not.toBeNull();
   });
 });
