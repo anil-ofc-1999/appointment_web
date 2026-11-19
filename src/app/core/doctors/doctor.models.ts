@@ -25,6 +25,26 @@ export interface Page<T> {
   totalPages: number;
 }
 
+export type SlotStatus = 'AVAILABLE' | 'BOOKED';
+
+export interface Slot {
+  /** Clinic time, e.g. '10:30'. */
+  time: string;
+  /** UTC ISO instants. */
+  startAt: string;
+  endAt: string;
+  status: SlotStatus;
+}
+
+/** GET /doctors/:id/slots?date= (FR-3.5). */
+export interface SlotsResponse {
+  doctorId: number;
+  date: string;
+  slotMinutes: number;
+  onLeave: boolean;
+  slots: Slot[];
+}
+
 export interface DoctorSearchCriteria {
   search: string;
   specializationId: number | null;

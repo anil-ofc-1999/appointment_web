@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
-import { Doctor, DoctorSearchCriteria, Page, Specialization } from './doctor.models';
+import { Doctor, DoctorSearchCriteria, Page, SlotsResponse, Specialization } from './doctor.models';
 
 export const DOCTORS_PAGE_SIZE = 10;
 /** Same limit as the API (search max 100 characters). */
@@ -27,6 +27,18 @@ export class DoctorService {
     if (criteria.specializationId)
       params = params.set('specializationId', criteria.specializationId);
     return this.http.get<Page<Doctor>>('/api/v1/doctors', { params });
+  }
+
+  /** One bookable doctor (404 DOCTOR_NOT_FOUND when inactive or unknown). */
+  doctor(id: number): Observable<Doctor> {
+    return this.http
+      .get<{ doctor: Doctor }>(`/api/v1/doctors/${id}`)
+      .pipe(map((res) => res.doctor));
+  }
+
+  /** FR-3.5: slots of a doctor for a clinic date (YYYY-MM-DD). */
+  slots(id: number, date: string): Observable<SlotsResponse> {
+    return this.http.get<SlotsResponse>(`/api/v1/doctors/${id}/slots`, { params: { date } });
   }
 }
 

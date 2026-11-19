@@ -24,5 +24,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/doctor-search/doctor-search').then((m) => m.DoctorSearch),
     title: 'Find a doctor · Doctor Appointments',
   },
+  {
+    path: 'doctors/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/doctor-detail/doctor-detail').then((m) => m.DoctorDetail),
+    title: 'Doctor · Doctor Appointments',
+  },
   { path: '**', redirectTo: '' },
 ];

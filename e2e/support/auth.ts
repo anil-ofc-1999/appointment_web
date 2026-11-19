@@ -36,6 +36,25 @@ export async function registerViaApi(page: Page, patient: NewPatient): Promise<v
   expect(res.status(), await res.text()).toBe(201);
 }
 
+/** Logs in through the API and returns the access token (for setting up data). */
+export async function tokenViaApi(page: Page, email: string, password: string): Promise<string> {
+  const res = await page.request.post('/api/v1/auth/login', { data: { email, password } });
+  expect(res.status(), await res.text()).toBe(200);
+  return (await res.json()).accessToken as string;
+}
+
+/** Another patient books a slot through the API, so the slot shows as BOOKED. */
+export async function bookAsOtherPatient(page: Page, doctorId: number, startAt: string) {
+  const other = newPatient();
+  await registerViaApi(page, other);
+  const token = await tokenViaApi(page, other.email, other.password);
+  const res = await page.request.post('/api/v1/appointments', {
+    data: { doctorId, startAt },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  expect(res.status(), await res.text()).toBe(201);
+}
+
 export async function login(page: Page, email: string, password: string) {
   await page.goto('/login');
   await page.getByLabel('Email').fill(email);

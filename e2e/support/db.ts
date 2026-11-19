@@ -35,14 +35,28 @@ export const E2E_SPECIALIZATION_LIKE = 'E2E %';
  */
 export function deleteE2eUsers(): Promise<number> {
   return withClient(async (client) => {
+    const e2eUsers = 'SELECT id FROM users WHERE email LIKE $1';
+    const e2eDoctors = `SELECT id FROM doctors WHERE user_id IN (${e2eUsers})`;
+    // Appointments first (their audit rows cascade), then doctors, users, specializations.
+    await client.query(`DELETE FROM appointment_audit WHERE changed_by IN (${e2eUsers})`, [
+      E2E_EMAIL_LIKE,
+    ]);
     await client.query(
-      'DELETE FROM doctors WHERE user_id IN (SELECT id FROM users WHERE email LIKE $1)',
+      `DELETE FROM appointments WHERE patient_id IN (${e2eUsers}) OR doctor_id IN (${e2eDoctors})`,
       [E2E_EMAIL_LIKE],
     );
+    await client.query(`DELETE FROM doctors WHERE user_id IN (${e2eUsers})`, [E2E_EMAIL_LIKE]);
     const res = await client.query('DELETE FROM users WHERE email LIKE $1', [E2E_EMAIL_LIKE]);
     await client.query('DELETE FROM specializations WHERE name LIKE $1', [E2E_SPECIALIZATION_LIKE]);
     return res.rowCount ?? 0;
   });
+}
+
+export interface E2eScheduleBlock {
+  /** 0 = Sunday .. 6 = Saturday */
+  dayOfWeek: number;
+  startTime: string; // 'HH:MM'
+  endTime: string;
 }
 
 export interface E2eDoctorInput {
@@ -51,7 +65,17 @@ export interface E2eDoctorInput {
   slotMinutes?: 15 | 30;
   bio?: string;
   isActive?: boolean;
+  /** Weekly schedule (FR-3.1). Default: none. */
+  schedule?: E2eScheduleBlock[];
+  /** Leave dates 'YYYY-MM-DD' (FR-3.3). */
+  leaves?: string[];
 }
+
+/** Every day of the week, 09:00–13:00 and 14:00–21:00. */
+export const EVERY_DAY: E2eScheduleBlock[] = [0, 1, 2, 3, 4, 5, 6].flatMap((dayOfWeek) => [
+  { dayOfWeek, startTime: '09:00', endTime: '13:00' },
+  { dayOfWeek, startTime: '14:00', endTime: '21:00' },
+]);
 
 export interface E2eSpecializationInput {
   name: string;
@@ -98,7 +122,21 @@ export function createE2eDoctors(
             d.isActive ?? true,
           ],
         );
-        doctors[d.name] = doc.rows[0].id;
+        const doctorId = doc.rows[0].id;
+        doctors[d.name] = doctorId;
+        for (const block of d.schedule ?? []) {
+          await client.query(
+            `INSERT INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time)
+             VALUES ($1, $2, $3, $4)`,
+            [doctorId, block.dayOfWeek, block.startTime, block.endTime],
+          );
+        }
+        for (const date of d.leaves ?? []) {
+          await client.query('INSERT INTO doctor_leaves (doctor_id, leave_date) VALUES ($1, $2)', [
+            doctorId,
+            date,
+          ]);
+        }
       }
     }
     return { specializations, doctors };

@@ -24,6 +24,8 @@ export default defineConfig({
   retries: process.env['CI'] ? 1 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
   globalSetup: './e2e/global-setup.ts',
+  // Slow-motion demo runs need more time per test than the 30 s default.
+  timeout: IS_DEMO ? 180_000 : 30_000,
   use: {
     baseURL: `http://localhost:${WEB_PORT}`,
     trace: 'retain-on-failure',
@@ -54,7 +56,8 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      command: `npx ng serve --port ${WEB_PORT} --proxy-config e2e/proxy.e2e.conf.json`,
+      // No watch / live reload: editing code during a run must not reload pages mid-test.
+      command: `npx ng serve --port ${WEB_PORT} --proxy-config e2e/proxy.e2e.conf.json --no-watch --no-live-reload`,
       url: `http://localhost:${WEB_PORT}`,
       reuseExistingServer: !process.env['CI'],
       timeout: 180_000,
