@@ -40,6 +40,7 @@ describe('Home', () => {
   it('welcomes a logged-in user by name', async () => {
     const el = await render('ok');
     expect(el.querySelector('[data-testid="welcome"]')?.textContent).toContain('Asha Reddy');
+    expect(el.querySelector('a[href="/doctors"]')?.textContent).toContain('Find a doctor');
   });
 
   it('invites a guest to log in or register', async () => {

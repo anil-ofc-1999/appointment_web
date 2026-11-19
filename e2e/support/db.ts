@@ -26,11 +26,82 @@ async function withClient<T>(fn: (client: pg.Client) => Promise<T>): Promise<T> 
   }
 }
 
-/** Removes all E2E test users (they never have appointments). */
+/** Every specialization created by E2E tests starts with this, so cleanup never touches real data. */
+export const E2E_SPECIALIZATION_LIKE = 'E2E %';
+
+/**
+ * Removes all E2E test data: doctors (their schedules/leaves cascade), users and
+ * specializations. E2E data never has appointments.
+ */
 export function deleteE2eUsers(): Promise<number> {
   return withClient(async (client) => {
+    await client.query(
+      'DELETE FROM doctors WHERE user_id IN (SELECT id FROM users WHERE email LIKE $1)',
+      [E2E_EMAIL_LIKE],
+    );
     const res = await client.query('DELETE FROM users WHERE email LIKE $1', [E2E_EMAIL_LIKE]);
+    await client.query('DELETE FROM specializations WHERE name LIKE $1', [E2E_SPECIALIZATION_LIKE]);
     return res.rowCount ?? 0;
+  });
+}
+
+export interface E2eDoctorInput {
+  name: string;
+  fee?: number;
+  slotMinutes?: 15 | 30;
+  bio?: string;
+  isActive?: boolean;
+}
+
+export interface E2eSpecializationInput {
+  name: string;
+  isActive?: boolean;
+  doctors: E2eDoctorInput[];
+}
+
+/**
+ * Creates specializations and doctors straight in the database, like an admin would.
+ * Names must start with "E2E " (specializations) so cleanup can find them; doctor
+ * accounts get e2e-*@example.com emails.
+ */
+export function createE2eDoctors(
+  specs: E2eSpecializationInput[],
+): Promise<{ specializations: Record<string, number>; doctors: Record<string, number> }> {
+  return withClient(async (client) => {
+    const specializations: Record<string, number> = {};
+    const doctors: Record<string, number> = {};
+    for (const spec of specs) {
+      if (!spec.name.startsWith('E2E '))
+        throw new Error('E2E specialization names start with "E2E "');
+      const s = await client.query<{ id: number }>(
+        'INSERT INTO specializations (name, is_active) VALUES ($1, $2) RETURNING id',
+        [spec.name, spec.isActive ?? true],
+      );
+      specializations[spec.name] = s.rows[0].id;
+
+      for (const d of spec.doctors) {
+        const email = `e2e-doctor-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+        const u = await client.query<{ id: number }>(
+          `INSERT INTO users (name, email, password_hash, role, is_active, updated_at)
+           VALUES ($1, $2, 'not-a-real-hash', 'DOCTOR', true, now()) RETURNING id`,
+          [d.name, email],
+        );
+        const doc = await client.query<{ id: number }>(
+          `INSERT INTO doctors (user_id, specialization_id, fee, slot_minutes, bio, is_active)
+           VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+          [
+            u.rows[0].id,
+            s.rows[0].id,
+            d.fee ?? 500,
+            d.slotMinutes ?? 30,
+            d.bio ?? null,
+            d.isActive ?? true,
+          ],
+        );
+        doctors[d.name] = doc.rows[0].id;
+      }
+    }
+    return { specializations, doctors };
   });
 }
 

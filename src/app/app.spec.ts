@@ -46,6 +46,16 @@ describe('App shell', () => {
     expect(el.querySelector('a[href="/login"]')).toBeNull();
   });
 
+  it('shows "Find a doctor" only to logged-in users', async () => {
+    const { el } = await render(true);
+    expect(el.querySelector('nav a[href="/doctors"]')?.textContent).toContain('Find a doctor');
+  });
+
+  it('hides "Find a doctor" from guests', async () => {
+    const { el } = await render(false);
+    expect(el.querySelector('nav a[href="/doctors"]')).toBeNull();
+  });
+
   it('Log out clears the session and goes to the login page', async () => {
     const { fixture, el } = await render(true);
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);

@@ -42,3 +42,15 @@ export async function login(page: Page, email: string, password: string) {
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Log in' }).click();
 }
+
+/**
+ * Registers a fresh patient and logs in through the UI.
+ * For tests where login itself is not under test.
+ */
+export async function loginAsNewPatient(page: Page): Promise<NewPatient> {
+  const patient = newPatient();
+  await registerViaApi(page, patient);
+  await login(page, patient.email, patient.password);
+  await expect(page.getByTestId('welcome')).toBeVisible();
+  return patient;
+}

@@ -3,6 +3,7 @@
 
   <nav class="nav" aria-label="Account">
     @if (auth.user(); as user) {
+      <a routerLink="/doctors" routerLinkActive="active">Find a doctor</a>
       <span class="user" data-testid="current-user">{{ user.name }}</span>
       <button type="button" class="nav-button" (click)="logout()">Log out</button>
     } @else {

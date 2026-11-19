@@ -156,3 +156,26 @@ a {
 .auth-card > .hint {
   margin-bottom: 1rem;
 }
+
+.btn-secondary {
+  color: var(--color-primary);
+  background: var(--color-bg);
+  border-color: var(--color-primary);
+}
+
+a.btn {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
