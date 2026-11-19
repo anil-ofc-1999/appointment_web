@@ -2,6 +2,9 @@ import {
   addDays,
   bookableDateOrToday,
   bookableRange,
+  clinicDateOf,
+  clinicTimeOf,
+  isIsoInstant,
   clinicToday,
   formatLongDate,
   formatShortDate,
@@ -91,5 +94,36 @@ describe('formatting', () => {
     ['18:30', 'Evening'],
   ])('%s is %s', (time, part) => {
     expect(partOfDay(time)).toBe(part);
+  });
+});
+
+describe('instants (ISO) in clinic time', () => {
+  it('clinicDateOf / clinicTimeOf read the clinic date and time', () => {
+    expect(clinicDateOf('2030-01-08T04:30:00.000Z')).toBe('2030-01-08');
+    expect(clinicTimeOf('2030-01-08T04:30:00.000Z')).toBe('10:00');
+  });
+
+  it('late UTC evening is the next clinic day', () => {
+    expect(clinicDateOf('2030-01-08T19:00:00.000Z')).toBe('2030-01-09');
+    expect(clinicTimeOf('2030-01-08T19:00:00.000Z')).toBe('00:30');
+  });
+
+  it.each(['2030-01-08T04:30:00.000Z', '2030-01-08T10:00:00+05:30', '2030-01-08T10:00Z'])(
+    'isIsoInstant accepts %s',
+    (value) => {
+      expect(isIsoInstant(value)).toBe(true);
+    },
+  );
+
+  it.each([
+    '2030-01-08',
+    '2030-01-08T10:00:00',
+    '2030-13-08T10:00:00Z',
+    'tomorrow',
+    '',
+    null,
+    undefined,
+  ])('isIsoInstant rejects %j', (value) => {
+    expect(isIsoInstant(value)).toBe(false);
   });
 });

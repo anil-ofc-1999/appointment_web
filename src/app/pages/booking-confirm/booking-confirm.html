@@ -1,0 +1,121 @@
+<section class="booking">
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted" role="status" data-testid="booking-loading">Loading…</p>
+    }
+
+    @case ('invalid-slot') {
+      <div class="empty" data-testid="invalid-slot">
+        <h1>This slot cannot be booked</h1>
+        <p>The time is missing, already passed, or more than 30 days ahead.</p>
+        <a class="btn btn-primary inline" [routerLink]="['/doctors', doctorId() ?? '']">
+          Choose a slot
+        </a>
+      </div>
+    }
+
+    @case ('not-found') {
+      <div class="empty" data-testid="booking-doctor-not-found">
+        <h1>Doctor not found</h1>
+        <p>This doctor does not exist or is not taking appointments.</p>
+        <a class="btn btn-primary inline" routerLink="/doctors">Find another doctor</a>
+      </div>
+    }
+
+    @case ('error') {
+      <div class="alert alert-error" role="alert" data-testid="booking-load-error">
+        <p>{{ loadError() }}</p>
+        <button type="button" class="btn btn-secondary" (click)="retryLoad()">Try again</button>
+      </div>
+    }
+
+    @case ('ready') {
+      @if (doctor(); as d) {
+        @if (slot(); as s) {
+          <h1>Confirm your appointment</h1>
+
+          <dl class="summary" data-testid="booking-summary">
+            <dt>Doctor</dt>
+            <dd>{{ d.name }}</dd>
+            <dt>Specialization</dt>
+            <dd>{{ d.specialization.name }}</dd>
+            <dt>Date</dt>
+            <dd>{{ s.dateLabel }}</dd>
+            <dt>Time</dt>
+            <dd>{{ s.time }} ({{ d.slotMinutes }} minutes)</dd>
+            <dt>Fee</dt>
+            <dd>{{ d.fee | currency: 'INR' : 'symbol' : '1.0-2' }} (pay at the clinic)</dd>
+          </dl>
+
+          <p class="hint">You can cancel or reschedule up to 2 hours before the appointment.</p>
+
+          @if (!isPatient()) {
+            <p class="alert alert-info" role="status" data-testid="not-patient">
+              Only patients can book appointments. Please log in with a patient account.
+            </p>
+          }
+
+          @if (bookError(); as err) {
+            <div class="alert alert-error" role="alert" data-testid="booking-error">
+              <p>{{ err.message }}</p>
+              @if (canPickAnother()) {
+                <a
+                  class="btn btn-secondary"
+                  [routerLink]="backLink().commands"
+                  [queryParams]="backLink().queryParams"
+                >
+                  Choose another slot
+                </a>
+              } @else if (err.code === 'DAILY_LIMIT_REACHED') {
+                <a class="btn btn-secondary" routerLink="/appointments">See my appointments</a>
+              }
+            </div>
+          }
+
+          <div class="actions">
+            <a
+              class="btn btn-secondary"
+              [routerLink]="backLink().commands"
+              [queryParams]="backLink().queryParams"
+            >
+              Back
+            </a>
+            <button
+              type="button"
+              class="btn btn-primary inline"
+              [disabled]="submitting() || !isPatient() || cannotRetry()"
+              (click)="confirm()"
+            >
+              {{ submitting() ? 'Booking…' : 'Confirm booking' }}
+            </button>
+          </div>
+        }
+      }
+    }
+
+    @case ('booked') {
+      @if (booked(); as a) {
+        <div class="success" data-testid="booking-success">
+          <h1>Appointment booked</h1>
+          <p class="alert alert-success" role="status">
+            Your appointment with <strong>{{ a.doctor.name }}</strong> is booked.
+          </p>
+          <dl class="summary">
+            <dt>Date</dt>
+            <dd>{{ dateLabel(a.date) }}</dd>
+            <dt>Time</dt>
+            <dd>{{ a.time }}</dd>
+            <dt>Status</dt>
+            <dd data-testid="booked-status">{{ a.status }}</dd>
+            <dt>Reference</dt>
+            <dd data-testid="booked-id">#{{ a.id }}</dd>
+          </dl>
+          <div class="actions">
+            <a class="btn btn-primary inline" routerLink="/appointments">See my appointments</a>
+            <a class="btn btn-secondary" routerLink="/doctors">Book another</a>
+          </div>
+        </div>
+      }
+    }
+  }
+</section>

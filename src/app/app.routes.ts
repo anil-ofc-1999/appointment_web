@@ -30,5 +30,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/doctor-detail/doctor-detail').then((m) => m.DoctorDetail),
     title: 'Doctor · Doctor Appointments',
   },
+  {
+    path: 'doctors/:id/book',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/booking-confirm/booking-confirm').then((m) => m.BookingConfirm),
+    title: 'Confirm booking · Doctor Appointments',
+  },
   { path: '**', redirectTo: '' },
 ];

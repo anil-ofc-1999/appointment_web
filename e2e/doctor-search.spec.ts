@@ -30,6 +30,8 @@ const PAGED = `E2E Paged ${RUN}`;
 let ids: Awaited<ReturnType<typeof createE2eDoctors>>;
 
 test.beforeAll(async () => {
+  // Playwright can run beforeAll again in the same worker: create the data only once.
+  if (ids) return;
   ids = await createE2eDoctors([
     {
       name: CARDIO,

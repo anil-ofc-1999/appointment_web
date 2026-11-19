@@ -21,6 +21,8 @@ const DAY_AFTER = clinicDate(2);
 let ids: Awaited<ReturnType<typeof createE2eDoctors>>['doctors'];
 
 test.beforeAll(async () => {
+  // Playwright can run beforeAll again in the same worker: create the data only once.
+  if (ids) return;
   ({ doctors: ids } = await createE2eDoctors([
     {
       name: SPEC,

@@ -434,6 +434,21 @@ describe('Doctor search — negative scenarios', () => {
     again.flush(page([ALL[0]]));
   });
 
+  it('regression: typed text cannot come back after "Clear filters" clicked within 300 ms', async () => {
+    const screen = await open('/doctors?q=zzz');
+    await screen.respond(page([]));
+
+    await screen.type('nobody'); // typing timer starts
+    screen.button('Show all doctors')!.click(); // explicit action before it fires
+    await screen.stable();
+    screen.doctorsRequest().flush(page(ALL));
+    await wait(350);
+    await screen.stable();
+
+    expect(screen.url()).toBe('/doctors');
+    screen.http.expectNone((r) => r.url === '/api/v1/doctors');
+  });
+
   it('a slow old answer never replaces a newer search (old request is cancelled)', async () => {
     const screen = await open();
     const first = screen.doctorsRequest();

@@ -82,7 +82,7 @@ E2E is not in CI yet (it needs the API repo and a database in the same job).
 | 1. Login / Register          | Done    |
 | 2. Doctor search             | Done    |
 | 3. Doctor detail + slot grid | Done    |
-| 4. Booking confirmation      | Next    |
-| 5. My Appointments           | Planned |
+| 4. Booking confirmation      | Done    |
+| 5. My Appointments           | Next    |
 | 6. Doctor dashboard          | Planned |
 | 7. Admin panel               | Planned |

@@ -62,3 +62,22 @@ describe('parseApiError', () => {
     );
   });
 });
+
+describe('parseApiError — booking and appointment codes', () => {
+  it.each([
+    ['SLOT_ALREADY_BOOKED', 409, 'someone has just booked this slot'],
+    ['DAILY_LIMIT_REACHED', 409, 'Only one per day'],
+    ['SLOT_IN_PAST', 400, 'already passed'],
+    ['BEYOND_BOOKING_WINDOW', 400, '30 days ahead'],
+    ['DOCTOR_ON_LEAVE', 400, 'on leave'],
+    ['OUTSIDE_SCHEDULE', 400, 'does not work at this time'],
+    ['DOCTOR_NOT_FOUND', 404, 'not taking appointments'],
+    ['CHANGE_WINDOW_PASSED', 400, '2 hours'],
+    ['INVALID_STATUS_TRANSITION', 409, 'can no longer be changed'],
+    ['SAME_SLOT', 400, 'different slot'],
+    ['APPOINTMENT_NOT_STARTED', 400, 'after the appointment has started'],
+    ['NOT_FOUND', 404, 'not found'],
+  ])('%s has a clear message', (code, status, text) => {
+    expect(parseApiError(httpError(status, apiError(code, 'raw'))).message).toContain(text);
+  });
+});

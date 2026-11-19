@@ -2,7 +2,7 @@ import { CurrencyPipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Subject, catchError, debounceTime, filter, map, merge, of, switchMap, tap } from 'rxjs';
+import { EMPTY, Subject, catchError, filter, map, merge, of, switchMap, tap, timer } from 'rxjs';
 
 import { parseApiError } from '../../core/api-error';
 import {
@@ -34,7 +34,7 @@ export class DoctorSearch implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   /** Typing in the search box; debounced before it reaches the URL. */
-  private readonly typed$ = new Subject<string>();
+  private readonly typed$ = new Subject<string | null>();
   /** Bumped by "Try again" to reload the same criteria. */
   private readonly retry$ = new Subject<void>();
 
@@ -70,8 +70,9 @@ export class DoctorSearch implements OnInit {
 
     this.typed$
       .pipe(
-        map((text) => text.trim()),
-        debounceTime(300),
+        // null = an explicit action (Enter, Clear filters, specialization, page) happened:
+        // drop any pending typed text so it cannot fire later and undo that action.
+        switchMap((text) => (text === null ? EMPTY : timer(300).pipe(map(() => text.trim())))),
         // Compare with the search that is ACTIVE now, not the last typed value:
         // - after Enter the same search is already done -> no extra navigation
         //   (an extra one could cancel a redirect to /login after a 401);
@@ -79,7 +80,7 @@ export class DoctorSearch implements OnInit {
         filter((search) => search !== this.criteria().search),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe((search) => this.update({ search, page: 1 }));
+      .subscribe((search) => this.navigate({ search, page: 1 }));
 
     // The URL is the single source of truth: reload / back / shared links all work.
     const fromUrl$ = this.route.queryParamMap.pipe(
@@ -128,7 +129,13 @@ export class DoctorSearch implements OnInit {
     this.retry$.next();
   }
 
+  /** An explicit user action: cancel pending typing, then navigate. */
   private update(change: Partial<DoctorSearchCriteria>): void {
+    this.typed$.next(null);
+    this.navigate(change);
+  }
+
+  private navigate(change: Partial<DoctorSearchCriteria>): void {
     const next = { ...this.criteria(), ...change };
     void this.router.navigate([], {
       relativeTo: this.route,

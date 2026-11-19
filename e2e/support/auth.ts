@@ -73,3 +73,6 @@ export async function loginAsNewPatient(page: Page): Promise<NewPatient> {
   await expect(page.getByTestId('welcome')).toBeVisible();
   return patient;
 }
+
+/** Seed accounts (prisma/seed.js in appointment_node_API; local test data only). */
+export const SEED_ADMIN = { email: 'admin@example.com', password: 'Password123' };

@@ -149,3 +149,15 @@ export function disableUser(email: string): Promise<void> {
     await client.query('UPDATE users SET is_active = false WHERE email = $1', [email]);
   });
 }
+
+/** Number of appointments of a patient, by status (to check what really was saved). */
+export function appointmentsOf(email: string): Promise<{ status: string; count: number }[]> {
+  return withClient(async (client) => {
+    const res = await client.query<{ status: string; count: string }>(
+      `SELECT a.status, count(*) FROM appointments a JOIN users u ON u.id = a.patient_id
+       WHERE u.email = $1 GROUP BY a.status ORDER BY a.status`,
+      [email],
+    );
+    return res.rows.map((r) => ({ status: r.status, count: Number(r.count) }));
+  });
+}

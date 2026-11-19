@@ -67,6 +67,32 @@ export function formatLongDate(date: string): string {
   }).format(new Date(Date.UTC(y, m - 1, d)));
 }
 
+/** Clinic date 'YYYY-MM-DD' of an instant (ISO string). */
+export function clinicDateOf(iso: string): string {
+  return clinicToday(new Date(iso));
+}
+
+/** Clinic time 'HH:MM' (24-hour) of an instant (ISO string). */
+export function clinicTimeOf(iso: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: CLINIC_TIME_ZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(iso));
+}
+
+/** A valid ISO instant with a time zone, e.g. '2030-01-08T04:30:00.000Z'. */
+export function isIsoInstant(value: string | null | undefined): value is string {
+  if (
+    !value ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/.test(value)
+  ) {
+    return false;
+  }
+  return !Number.isNaN(new Date(value).getTime());
+}
+
 /** Part of the day for grouping slots: '10:30' -> 'Morning'. */
 export function partOfDay(time: string): 'Morning' | 'Afternoon' | 'Evening' {
   const hour = Number(time.slice(0, 2));

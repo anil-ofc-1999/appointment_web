@@ -28,6 +28,21 @@ const MESSAGES: Record<string, string> = {
   UNAUTHORIZED: 'Please log in to continue.',
   FORBIDDEN: 'You do not have permission to do this.',
   VALIDATION_ERROR: 'Please fix the highlighted fields.',
+  // Booking (FR-4) and appointment changes (FR-5)
+  DOCTOR_NOT_FOUND: 'This doctor is not taking appointments.',
+  SLOT_ALREADY_BOOKED: 'Sorry, someone has just booked this slot. Please choose another time.',
+  DAILY_LIMIT_REACHED:
+    'You already have a booking with this doctor on this day. Only one per day is allowed.',
+  SLOT_IN_PAST: 'This time has already passed. Please choose a later slot.',
+  BEYOND_BOOKING_WINDOW: 'Appointments can be booked at most 30 days ahead.',
+  DOCTOR_ON_LEAVE: 'The doctor is on leave on this day. Please choose another date.',
+  OUTSIDE_SCHEDULE: 'The doctor does not work at this time. Please choose a slot from the list.',
+  CHANGE_WINDOW_PASSED:
+    'Appointments can be changed or cancelled only up to 2 hours before they start.',
+  INVALID_STATUS_TRANSITION: 'This appointment can no longer be changed.',
+  SAME_SLOT: 'This is already your appointment time. Please choose a different slot.',
+  APPOINTMENT_NOT_STARTED: 'You can mark this only after the appointment has started.',
+  NOT_FOUND: 'This item was not found. It may have been removed.',
 };
 
 function isApiErrorBody(value: unknown): value is ApiErrorBody {
