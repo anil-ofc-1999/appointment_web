@@ -12,6 +12,10 @@ import { defineConfig, devices } from '@playwright/test';
 const API_DIR = process.env['API_DIR'] ?? '../appointment_node_API';
 const API_PORT = 3100;
 const WEB_PORT = 4300;
+const SCRIPT = process.env['npm_lifecycle_event'];
+const IS_DEMO = SCRIPT === 'e2e:demo';
+// Visible runs use the installed Google Chrome.
+const USE_INSTALLED_CHROME = IS_DEMO || SCRIPT === 'e2e:headed';
 
 export default defineConfig({
   testDir: './e2e',
@@ -24,9 +28,16 @@ export default defineConfig({
     baseURL: `http://localhost:${WEB_PORT}`,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    // `npm run e2e:demo` slows every browser action down so a person can watch.
+    // Any run can also set SLOW_MO=<milliseconds>.
+    launchOptions: { slowMo: Number(process.env['SLOW_MO'] ?? (IS_DEMO ? 600 : 0)) },
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      // Headed / demo runs open the Google Chrome installed on the machine.
+      use: { ...devices['Desktop Chrome'], ...(USE_INSTALLED_CHROME ? { channel: 'chrome' } : {}) },
+    },
     { name: 'mobile', use: { ...devices['Pixel 7'] } },
   ],
   webServer: [

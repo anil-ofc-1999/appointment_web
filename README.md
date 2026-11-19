@@ -47,7 +47,8 @@ port 3000 (no CORS setup needed in development).
 | `npm run build`      | Production build to `dist/`                        |
 | `npm run check`      | lint + format check + tests + build (same as CI)   |
 | `npm run e2e`        | End-to-end tests (Playwright, real API + database) |
-| `npm run e2e:headed` | E2E tests in a visible browser window              |
+| `npm run e2e:headed` | E2E tests in a visible Google Chrome window        |
+| `npm run e2e:demo`   | Slow, visible run in your installed Google Chrome  |
 | `npm run e2e:report` | Open the HTML report of the last E2E run           |
 
 A **pre-commit hook** (`.githooks/pre-commit`, enabled by `npm install`) runs
