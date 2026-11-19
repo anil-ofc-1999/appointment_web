@@ -4,9 +4,9 @@
 
 We use **two long-lived branches** only (same as `appointment_node_API`, decision D-21):
 
-| Branch    | Purpose                                                              |
-| --------- | -------------------------------------------------------------------- |
-| `main`    | Released, always working code. **No direct pushes** — only via PR.   |
+| Branch    | Purpose                                                             |
+| --------- | ------------------------------------------------------------------- |
+| `main`    | Released, always working code. **No direct pushes** — only via PR.  |
 | `develop` | All day-to-day work. Commit here, push here, CI runs on every push. |
 
 When `develop` is ready, open **one pull request `develop` → `main`**.

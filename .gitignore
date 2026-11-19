@@ -30,3 +30,8 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+
+# Angular extras
+/tmp
+.sass-cache/
+__screenshots__/

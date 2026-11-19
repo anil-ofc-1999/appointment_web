@@ -1,0 +1,19 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-primary);
+}
+
+.brand {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.content {
+  padding: 1.5rem 1rem;
+  max-width: 72rem;
+  margin: 0 auto;
+}

@@ -1,0 +1,22 @@
+<section class="home">
+  <h1>Book a doctor's appointment</h1>
+  <p>Find a doctor by specialization, pick a free slot and book in a few clicks.</p>
+
+  <p class="status" role="status">
+    API status:
+    @switch (apiStatus()) {
+      @case ('ok') {
+        <span class="ok">connected</span>
+      }
+      @case ('degraded') {
+        <span class="warn">running, but the database is down</span>
+      }
+      @case ('unreachable') {
+        <span class="error">not reachable — start appointment_node_API with npm run dev</span>
+      }
+      @default {
+        <span>checking…</span>
+      }
+    }
+  </p>
+</section>

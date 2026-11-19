@@ -1,0 +1,53 @@
+# Web CI — runs on every pull request to main and every push to main or develop.
+# Same commands as `npm run check` locally, so local and CI results match.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+# Least privilege: this workflow only needs to read the code.
+permissions:
+  contents: read
+
+# A new push to the same PR cancels the older, now-outdated run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web - lint, format, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js (version from .nvmrc)
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies (exact versions from lockfile)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Security audit (production dependencies)
+        run: npm audit --omit=dev --audit-level=high
