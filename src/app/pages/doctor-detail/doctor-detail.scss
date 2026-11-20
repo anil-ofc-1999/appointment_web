@@ -127,6 +127,11 @@
   p {
     margin: 0;
   }
+
+  // On phones a floating bar covers the slot buttons under it: keep it in the page flow.
+  @media (width <= 640px) {
+    position: static;
+  }
 }
 
 .inline {

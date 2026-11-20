@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, guestGuard } from './core/auth/auth.guards';
+import { authGuard, guestGuard, roleGuard } from './core/auth/auth.guards';
 import { Home } from './pages/home/home';
 
 export const routes: Routes = [
@@ -36,6 +36,19 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/booking-confirm/booking-confirm').then((m) => m.BookingConfirm),
     title: 'Confirm booking · Doctor Appointments',
+  },
+  {
+    path: 'appointments',
+    canActivate: [authGuard, roleGuard('PATIENT')],
+    loadComponent: () =>
+      import('./pages/my-appointments/my-appointments').then((m) => m.MyAppointments),
+    title: 'My appointments · Doctor Appointments',
+  },
+  {
+    path: 'appointments/:id/reschedule',
+    canActivate: [authGuard, roleGuard('PATIENT')],
+    loadComponent: () => import('./pages/reschedule/reschedule').then((m) => m.Reschedule),
+    title: 'Reschedule · Doctor Appointments',
   },
   { path: '**', redirectTo: '' },
 ];

@@ -1,0 +1,119 @@
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.inline {
+  width: auto;
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+.small {
+  font-size: 0.875rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  border-bottom: 1px solid var(--color-border);
+
+  button {
+    font: inherit;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: none;
+    cursor: pointer;
+    color: var(--color-muted);
+
+    &.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+      font-weight: 600;
+    }
+  }
+}
+
+.list {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.appointment {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.125rem;
+  }
+
+  p {
+    margin: 0.125rem 0 0;
+  }
+
+  .specialization {
+    color: var(--color-primary);
+  }
+
+  .actions,
+  .alert {
+    grid-column: 1 / -1;
+  }
+}
+
+.status {
+  align-self: start;
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  background: #eef2f6;
+
+  &[data-status='BOOKED'] {
+    color: var(--color-primary);
+    background: #e8f1fb;
+  }
+
+  &[data-status='COMPLETED'] {
+    color: var(--color-success);
+    background: #e9f6ec;
+  }
+
+  &[data-status='CANCELLED'],
+  &[data-status='NO_SHOW'] {
+    color: var(--color-danger);
+    background: #fdecea;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.confirm {
+  margin: 0;
+  font-weight: 600;
+}
+
+.empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+}

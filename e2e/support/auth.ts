@@ -76,3 +76,20 @@ export async function loginAsNewPatient(page: Page): Promise<NewPatient> {
 
 /** Seed accounts (prisma/seed.js in appointment_node_API; local test data only). */
 export const SEED_ADMIN = { email: 'admin@example.com', password: 'Password123' };
+
+/** The access token of the user logged in on this page. */
+export function myToken(page: Page): Promise<string> {
+  return page.evaluate(
+    () => JSON.parse(localStorage.getItem('appointment.session') ?? '{}').accessToken as string,
+  );
+}
+
+/** Books through the API as the user logged in on this page; returns the appointment id. */
+export async function bookAsMe(page: Page, doctorId: number, startAt: string): Promise<number> {
+  const res = await page.request.post('/api/v1/appointments', {
+    data: { doctorId, startAt },
+    headers: { Authorization: `Bearer ${await myToken(page)}` },
+  });
+  expect(res.status(), await res.text()).toBe(201);
+  return (await res.json()).appointment.id as number;
+}

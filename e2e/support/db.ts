@@ -161,3 +161,30 @@ export function appointmentsOf(email: string): Promise<{ status: string; count: 
     return res.rows.map((r) => ({ status: r.status, count: Number(r.count) }));
   });
 }
+
+/** Inserts an appointment directly — for states the API cannot create (past, very soon). */
+export function insertAppointment(
+  patientEmail: string,
+  doctorId: number,
+  startAt: Date,
+  status: 'BOOKED' | 'COMPLETED' | 'NO_SHOW' | 'CANCELLED' = 'BOOKED',
+  minutes = 30,
+): Promise<number> {
+  return withClient(async (client) => {
+    const res = await client.query<{ id: number }>(
+      `INSERT INTO appointments (doctor_id, patient_id, start_at, end_at, status, updated_at)
+       SELECT $1, id, $2::timestamptz, $3::timestamptz, $4::"AppointmentStatus", now()
+       FROM users WHERE email = $5 RETURNING id`,
+      // ISO strings + explicit casts: in INSERT ... SELECT the parameter types are not
+      // inferred from the columns, and a JS Date could lose its time zone.
+      [
+        doctorId,
+        startAt.toISOString(),
+        new Date(startAt.getTime() + minutes * 60_000).toISOString(),
+        status,
+        patientEmail,
+      ],
+    );
+    return res.rows[0].id;
+  });
+}

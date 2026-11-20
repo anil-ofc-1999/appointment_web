@@ -68,3 +68,12 @@ describe('App shell', () => {
     expect(el.querySelector('a[href="/login"]')).not.toBeNull();
   });
 });
+
+describe('App shell — patient links', () => {
+  it('shows "My appointments" to a logged-in patient', async () => {
+    const { el } = await render(true);
+    expect(el.querySelector('nav a[href="/appointments"]')?.textContent).toContain(
+      'My appointments',
+    );
+  });
+});
