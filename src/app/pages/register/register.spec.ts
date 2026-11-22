@@ -72,6 +72,38 @@ describe('Register page — rendering & accessibility', () => {
     }
   });
 
+  it('both password fields have their own eye button', async () => {
+    const page = await render();
+    const toggles = [...page.el.querySelectorAll<HTMLButtonElement>('.password-toggle')];
+    expect(toggles.map((t) => t.getAttribute('aria-controls'))).toEqual([
+      'register-password',
+      'register-confirm',
+    ]);
+
+    toggles[0].click();
+    await page.fixture.whenStable();
+    expect(page.el.querySelector('#register-password')?.getAttribute('type')).toBe('text');
+    expect(page.el.querySelector('#register-confirm')?.getAttribute('type')).toBe('password');
+
+    toggles[1].click();
+    await page.fixture.whenStable();
+    expect(page.el.querySelector('#register-confirm')?.getAttribute('type')).toBe('text');
+
+    toggles[0].click();
+    await page.fixture.whenStable();
+    expect(page.el.querySelector('#register-password')?.getAttribute('type')).toBe('password');
+  });
+
+  it('a shown password is still sent and validated normally', async () => {
+    const page = await render();
+    page.el.querySelector<HTMLButtonElement>('.password-toggle')!.click();
+    await page.fixture.whenStable();
+    await fill(page);
+    await page.submit();
+
+    expect(page.http.expectOne('/api/v1/auth/register').request.body.password).toBe('Password123');
+  });
+
   it('marks phone as optional and explains the password rules', async () => {
     const page = await render();
 

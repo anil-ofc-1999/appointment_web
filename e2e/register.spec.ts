@@ -42,6 +42,41 @@ test.describe('Register — positive scenarios', () => {
     await expect(page.getByTestId('welcome')).toHaveText('Welcome, Ravi Teja');
     await expect(page.getByText('patient', { exact: true })).toBeVisible();
   });
+
+  test('the eye buttons show and hide each password, and the form still works', async ({
+    page,
+  }) => {
+    const patient = newPatient();
+    await page.goto('/register');
+    const password = page.locator('#register-password');
+    const confirm = page.locator('#register-confirm');
+    await password.fill(patient.password);
+    await confirm.fill(patient.password);
+
+    const eyes = page.getByRole('button', { name: 'Show password' });
+    await expect(eyes).toHaveCount(2);
+    await eyes.first().click();
+    await expect(password).toHaveAttribute('type', 'text');
+    await expect(confirm).toHaveAttribute('type', 'password');
+    await expect(page).toHaveURL(/\/register$/); // the eye does not submit
+
+    await page.getByRole('button', { name: 'Hide password' }).click();
+    await expect(password).toHaveAttribute('type', 'password');
+  });
+
+  test('login page eye button reveals the typed password', async ({ page }) => {
+    await page.goto('/login');
+    const password = page.locator('#login-password');
+    await password.fill('Secret123');
+
+    await page.getByRole('button', { name: 'Show password' }).click();
+    await expect(password).toHaveAttribute('type', 'text');
+    await expect(password).toHaveValue('Secret123');
+    await expect(page.getByRole('button', { name: 'Hide password' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
 });
 
 test.describe('Register — negative scenarios', () => {

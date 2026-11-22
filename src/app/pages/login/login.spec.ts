@@ -78,18 +78,31 @@ describe('Login page — rendering & accessibility', () => {
     expect(page.el.querySelector('a[href="/register"]')).not.toBeNull();
   });
 
-  it('can show and hide the password', async () => {
+  it('the eye button shows and hides the password', async () => {
     const page = await render();
-    const toggle = page.el.querySelector<HTMLButtonElement>('.btn-link')!;
+    const toggle = page.el.querySelector<HTMLButtonElement>('.password-toggle')!;
+    expect(toggle.getAttribute('aria-label')).toBe('Show password');
+    expect(toggle.getAttribute('aria-controls')).toBe('login-password');
 
     toggle.click();
     await page.fixture.whenStable();
     expect(page.el.querySelector('#login-password')?.getAttribute('type')).toBe('text');
     expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    expect(toggle.getAttribute('aria-label')).toBe('Hide password');
 
     toggle.click();
     await page.fixture.whenStable();
     expect(page.el.querySelector('#login-password')?.getAttribute('type')).toBe('password');
+  });
+
+  it('the eye button does not submit the form', async () => {
+    const page = await render();
+
+    page.el.querySelector<HTMLButtonElement>('.password-toggle')!.click();
+    await page.fixture.whenStable();
+
+    page.http.expectNone('/api/v1/auth/login');
+    expect(page.el.querySelector('.field-error')).toBeNull();
   });
 });
 

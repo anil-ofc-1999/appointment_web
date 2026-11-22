@@ -16,13 +16,14 @@ import {
   phoneValidator,
   requiredTrimmed,
 } from '../../core/auth/validators';
+import { PasswordToggle } from '../../shared/password-toggle';
 
 type RegisterField = 'name' | 'email' | 'phone' | 'password' | 'confirmPassword';
 
 /** Screen 1 (REQUIREMENTS §8): Register — FR-1.1 to FR-1.3. Patients only (FR-1.8). */
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, PasswordToggle],
   templateUrl: './register.html',
 })
 export class Register {
@@ -30,6 +31,9 @@ export class Register {
   private readonly router = inject(Router);
 
   protected readonly passwordMin = PASSWORD_MIN;
+  /** Eye buttons: show the typed password as plain text. */
+  protected readonly showPassword = signal(false);
+  protected readonly showConfirm = signal(false);
 
   protected readonly form = inject(NonNullableFormBuilder).group(
     {

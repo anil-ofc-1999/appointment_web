@@ -12,6 +12,7 @@ import {
   requiredTrimmed,
 } from '../../core/auth/validators';
 import { Specialization } from '../../core/doctors/doctor.models';
+import { PasswordToggle } from '../../shared/password-toggle';
 
 /** Fee: 0 or more, at most 2 decimals (same as the API). */
 const FEE = /^\d{1,8}(\.\d{1,2})?$/;
@@ -22,7 +23,7 @@ type DoctorField =
 /** FR-2.2 create / edit doctors, FR-2.3 activate / deactivate. */
 @Component({
   selector: 'app-admin-doctors',
-  imports: [ReactiveFormsModule, CurrencyPipe],
+  imports: [ReactiveFormsModule, CurrencyPipe, PasswordToggle],
   templateUrl: './admin-doctors.html',
   styleUrl: './admin.scss',
 })
@@ -41,6 +42,7 @@ export class AdminDoctors implements OnInit {
 
   // ----- add doctor -----
   protected readonly showAdd = signal(false);
+  protected readonly showPassword = signal(false);
   protected readonly addSubmitted = signal(false);
   protected readonly adding = signal(false);
   protected readonly addForm = this.fb.group({
