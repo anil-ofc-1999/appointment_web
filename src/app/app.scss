@@ -1,23 +1,38 @@
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  background: var(--color-primary);
+  gap: 0.5rem 1rem;
+  padding: 0.625rem 1rem;
+  background: linear-gradient(90deg, #17508f, var(--color-primary) 60%, #2a73c0);
   color: #fff;
+  box-shadow: 0 2px 8px rgb(15 63 115 / 25%);
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1.125rem;
   text-decoration: none;
+}
+
+.brand-logo {
+  border-radius: 8px;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 35%);
 }
 
 .nav {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem 1rem;
 
   a {
     color: #fff;
@@ -50,8 +65,27 @@
   }
 }
 
+// Working pages sit on a white "sheet" over the patterned background.
 .content {
-  padding: 1.5rem 1rem;
   max-width: 72rem;
-  margin: 0 auto;
+  margin: 1.5rem auto;
+  padding: 1.5rem;
+  background: var(--color-bg);
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgb(15 63 115 / 8%);
+
+  @media (width <= 640px) {
+    margin: 0;
+    padding: 1.25rem 1rem;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+// Home, login and register float directly on the background.
+.content:has(app-home),
+.content:has(app-login),
+.content:has(app-register) {
+  background: transparent;
+  box-shadow: none;
 }

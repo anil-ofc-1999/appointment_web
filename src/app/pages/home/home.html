@@ -1,34 +1,59 @@
-<section class="home">
-  @if (user(); as user) {
-    <h1 data-testid="welcome">Welcome, {{ user.name }}</h1>
-    <p>
-      You are logged in as <strong>{{ user.role.toLowerCase() }}</strong>.
-    </p>
-    <p><a class="btn btn-primary home-cta" routerLink="/doctors">Find a doctor</a></p>
-  } @else {
-    <h1>Book a doctor's appointment</h1>
-    <p>Find a doctor by specialization, pick a free slot and book in a few clicks.</p>
-    <p>
-      <a routerLink="/login">Log in</a> or <a routerLink="/register">create an account</a> to get
-      started.
-    </p>
-  }
-
-  <p class="status" role="status">
-    API status:
-    @switch (apiStatus()) {
-      @case ('ok') {
-        <span class="ok">connected</span>
-      }
-      @case ('degraded') {
-        <span class="warn">running, but the database is down</span>
-      }
-      @case ('unreachable') {
-        <span class="error">not reachable — start appointment_node_API with npm run dev</span>
-      }
-      @default {
-        <span>checking…</span>
-      }
+<section class="hero">
+  <div class="hero-text">
+    @if (user(); as user) {
+      <h1 data-testid="welcome">Welcome, {{ user.name }}</h1>
+      <p class="lead">
+        You are logged in as <strong>{{ user.role.toLowerCase() }}</strong>.
+      </p>
+      <p class="cta">
+        <a class="btn btn-primary home-cta" routerLink="/doctors">Find a doctor</a>
+      </p>
+    } @else {
+      <h1>Book a doctor's appointment in minutes</h1>
+      <p class="lead">
+        Find a doctor by specialization, pick a free slot and book in a few clicks.
+      </p>
+      <p class="cta">
+        <a class="btn btn-primary home-cta" routerLink="/register">Create an account</a>
+        <a class="btn btn-secondary home-cta" routerLink="/login">Log in</a>
+      </p>
     }
-  </p>
+  </div>
+  <img class="hero-art" src="hero.svg" alt="" width="360" height="280" />
 </section>
+
+<ul class="features" aria-label="How it works">
+  <li>
+    <span class="step" aria-hidden="true">1</span>
+    <h2>Find a doctor</h2>
+    <p>Search by name or specialization.</p>
+  </li>
+  <li>
+    <span class="step" aria-hidden="true">2</span>
+    <h2>Pick a free slot</h2>
+    <p>See open times for the next 30 days.</p>
+  </li>
+  <li>
+    <span class="step" aria-hidden="true">3</span>
+    <h2>Booked</h2>
+    <p>Cancel or reschedule up to 2 hours before.</p>
+  </li>
+</ul>
+
+<p class="status" role="status">
+  Service status:
+  @switch (apiStatus()) {
+    @case ('ok') {
+      <span class="ok">online</span>
+    }
+    @case ('degraded') {
+      <span class="warn">having trouble — please try again in a few minutes</span>
+    }
+    @case ('unreachable') {
+      <span class="warn">starting up — this can take up to a minute, please refresh shortly</span>
+    }
+    @default {
+      <span>checking…</span>
+    }
+  }
+</p>
