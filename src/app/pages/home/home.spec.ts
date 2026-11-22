@@ -22,19 +22,30 @@ async function render(status: ApiStatus, user = testUser as typeof testUser | nu
 }
 
 describe('Home', () => {
-  it('shows connected when the API is up', async () => {
+  it('shows "online" when the API is up', async () => {
     const el = await render('ok');
-    expect(el.querySelector('[role="status"]')?.textContent).toContain('connected');
+    expect(el.querySelector('[role="status"]')?.textContent).toContain('online');
   });
 
-  it('warns when the database is down', async () => {
+  it('degraded (database down): asks to try again later, no technical words', async () => {
     const el = await render('degraded');
-    expect(el.querySelector('[role="status"]')?.textContent).toContain('database is down');
+    const text = el.querySelector('[role="status"]')?.textContent ?? '';
+    expect(text).toContain('try again in a few minutes');
+    expect(text).not.toContain('database');
   });
 
-  it('tells the user how to start the API when it is unreachable', async () => {
+  it('unreachable (free server waking up): says it is starting up, no developer hints', async () => {
     const el = await render('unreachable');
-    expect(el.querySelector('[role="status"]')?.textContent).toContain('npm run dev');
+    const text = el.querySelector('[role="status"]')?.textContent ?? '';
+    expect(text).toContain('starting up');
+    expect(text).not.toContain('npm');
+  });
+
+  it('shows the 3 "how it works" steps and the illustration', async () => {
+    const el = await render('ok', null);
+    const steps = [...el.querySelectorAll('.features h2')].map((h) => h.textContent?.trim());
+    expect(steps).toEqual(['Find a doctor', 'Pick a free slot', 'Booked']);
+    expect(el.querySelector('img.hero-art')?.getAttribute('src')).toBe('hero.svg');
   });
 
   it('welcomes a logged-in user by name', async () => {
@@ -46,6 +57,7 @@ describe('Home', () => {
   it('invites a guest to log in or register', async () => {
     const el = await render('ok', null);
     expect(el.querySelector('[data-testid="welcome"]')).toBeNull();
-    expect(el.querySelector('a[href="/register"]')).not.toBeNull();
+    expect(el.querySelector('a[href="/register"]')?.textContent).toContain('Create an account');
+    expect(el.querySelector('a[href="/login"]')?.textContent).toContain('Log in');
   });
 });

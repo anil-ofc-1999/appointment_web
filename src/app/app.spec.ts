@@ -31,6 +31,14 @@ describe('App shell', () => {
     expect(el.querySelector('.brand')?.textContent).toContain('Doctor Appointments');
   });
 
+  it('shows the app logo in the top bar (decorative: empty alt text)', async () => {
+    const { el } = await render(false);
+    const logo = el.querySelector('.brand img');
+
+    expect(logo?.getAttribute('src')).toBe('favicon.svg');
+    expect(logo?.getAttribute('alt')).toBe('');
+  });
+
   it('shows Log in and Register links to guests', async () => {
     const { el } = await render(false);
 

@@ -25,7 +25,12 @@ body {
     Roboto,
     sans-serif;
   color: var(--color-text);
-  background: var(--color-bg);
+  // Soft blue gradient with a faint medical "plus" pattern (public/bg-pattern.svg).
+  background-color: #f2f7fc;
+  background-image:
+    url('/bg-pattern.svg'), linear-gradient(180deg, #eaf2fb 0%, #f6f9fd 45%, #eef7f3 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
   line-height: 1.5;
 }
 
@@ -41,10 +46,13 @@ a {
 /* Auth pages (login / register) */
 .auth-card {
   max-width: 26rem;
-  margin: 1rem auto;
-  padding: 1.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  margin: 1.5rem auto;
+  padding: 1.75rem;
+  background: var(--color-bg);
+  border: 1px solid #dbe6f2;
+  border-top: 4px solid var(--color-primary);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgb(15 63 115 / 12%);
 
   h1 {
     margin-top: 0;
