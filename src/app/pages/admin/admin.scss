@@ -1,0 +1,210 @@
+.muted {
+  color: var(--color-muted);
+}
+
+.small {
+  font-size: 0.875rem;
+}
+
+.inline {
+  width: auto;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  border-bottom: 1px solid var(--color-border);
+
+  button {
+    font: inherit;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: none;
+    cursor: pointer;
+    color: var(--color-muted);
+
+    &.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+      font-weight: 600;
+    }
+  }
+}
+
+.filters,
+.inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  .field {
+    flex: 1 1 10rem;
+    min-width: 0;
+    margin-bottom: 0;
+  }
+}
+
+select,
+textarea {
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  font: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: top;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+.status {
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  background: #eef2f6;
+
+  &[data-status='BOOKED'],
+  &[data-status='ACTIVE'] {
+    color: var(--color-primary);
+    background: #e8f1fb;
+  }
+
+  &[data-status='COMPLETED'] {
+    color: var(--color-success);
+    background: #e9f6ec;
+  }
+
+  &[data-status='NO_SHOW'],
+  &[data-status='CANCELLED'],
+  &[data-status='INACTIVE'] {
+    color: var(--color-danger);
+    background: #fdecea;
+  }
+}
+
+.section-head,
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  h2,
+  h3 {
+    margin: 0;
+  }
+}
+
+.panel-form {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+
+  h3 {
+    margin-top: 0;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0 1rem;
+}
+
+.cards {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+
+  p {
+    margin: 0.25rem 0 0;
+  }
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.spec-list {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+  }
+
+  .name {
+    flex: 1 1 8rem;
+    font-weight: 500;
+  }
+
+  .row-actions {
+    margin-top: 0;
+  }
+
+  .inline-form {
+    flex: 1 1 100%;
+    margin: 0;
+  }
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.empty {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+}

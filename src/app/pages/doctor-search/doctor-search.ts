@@ -1,7 +1,7 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, NavigationStart, Router, RouterLink } from '@angular/router';
 import { EMPTY, Subject, catchError, filter, map, merge, of, switchMap, tap, timer } from 'rxjs';
 
 import { parseApiError } from '../../core/api-error';
@@ -60,6 +60,16 @@ export class DoctorSearch implements OnInit {
   );
 
   ngOnInit(): void {
+    // Leaving this page (e.g. clicking a doctor) drops pending typed text: a late timer
+    // would otherwise navigate back to /doctors?q=... and cancel the user's navigation.
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationStart => e instanceof NavigationStart),
+        filter((e) => e.url.split('?')[0] !== '/doctors'),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => this.typed$.next(null));
+
     this.doctors
       .specializations()
       .pipe(takeUntilDestroyed(this.destroyRef))

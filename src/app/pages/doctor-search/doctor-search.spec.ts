@@ -27,7 +27,17 @@ const ALL = [
 async function open(url = '/doctors', { loadSpecializations = true } = {}) {
   TestBed.configureTestingModule({
     providers: [
-      provideRouter([{ path: 'doctors', component: DoctorSearch }]),
+      provideRouter([
+        { path: 'doctors', component: DoctorSearch },
+        // Opening another page takes time (lazy-loaded code); simulate 500 ms.
+        {
+          path: 'elsewhere',
+          canActivate: [
+            () => new Promise<boolean>((resolve) => setTimeout(() => resolve(true), 500)),
+          ],
+          children: [],
+        },
+      ]),
       provideHttpClient(),
       provideHttpClientTesting(),
     ],
@@ -446,6 +456,20 @@ describe('Doctor search — negative scenarios', () => {
     await screen.stable();
 
     expect(screen.url()).toBe('/doctors');
+    screen.http.expectNone((r) => r.url === '/api/v1/doctors');
+  });
+
+  it('regression: typing then opening a doctor within 300 ms stays on the doctor page', async () => {
+    const screen = await open();
+    await screen.respond(page(ALL));
+
+    await screen.type('arj'); // typing timer starts
+    const done = screen.router.navigateByUrl('/elsewhere'); // e.g. a click on "View available slots"
+    await wait(350); // the typing timer fires while that page is still opening
+    await done;
+    await screen.stable();
+
+    expect(screen.url()).toBe('/elsewhere');
     screen.http.expectNone((r) => r.url === '/api/v1/doctors');
   });
 

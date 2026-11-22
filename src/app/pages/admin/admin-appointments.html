@@ -1,0 +1,155 @@
+<form class="filters" (submit)="$event.preventDefault()">
+  <div class="field">
+    <label for="filter-doctor">Doctor</label>
+    <select id="filter-doctor" (change)="setFilter('doctorId', $any($event.target).value)">
+      <option value="" [selected]="!filters().doctorId">All doctors</option>
+      @for (d of doctors(); track d.id) {
+        <option [value]="d.id" [selected]="d.id === filters().doctorId">
+          {{ d.name }}{{ d.isActive ? '' : ' (inactive)' }}
+        </option>
+      }
+    </select>
+  </div>
+  <div class="field">
+    <label for="filter-status">Status</label>
+    <select id="filter-status" (change)="setFilter('status', $any($event.target).value)">
+      <option value="" [selected]="!filters().status">All statuses</option>
+      @for (s of statuses; track s.value) {
+        <option [value]="s.value" [selected]="s.value === filters().status">{{ s.label }}</option>
+      }
+    </select>
+  </div>
+  <div class="field">
+    <label for="filter-from">From</label>
+    <input
+      id="filter-from"
+      type="date"
+      [value]="filters().from ?? ''"
+      (change)="setFilter('from', $any($event.target).value)"
+    />
+  </div>
+  <div class="field">
+    <label for="filter-to">To</label>
+    <input
+      id="filter-to"
+      type="date"
+      [value]="filters().to ?? ''"
+      (change)="setFilter('to', $any($event.target).value)"
+    />
+  </div>
+  @if (hasFilters()) {
+    <button type="button" class="btn btn-secondary" (click)="clearFilters()">Clear filters</button>
+  }
+</form>
+
+@if (filterError(); as message) {
+  <p class="alert alert-error" role="alert" data-testid="filter-error">{{ message }}</p>
+}
+@if (notice(); as message) {
+  <p class="alert alert-success" role="status" data-testid="admin-notice">{{ message }}</p>
+}
+
+<div [attr.aria-busy]="state() === 'loading'">
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted" role="status">Loading appointments…</p>
+    }
+    @case ('error') {
+      <div class="alert alert-error" role="alert" data-testid="admin-appointments-error">
+        <p>{{ loadError() }}</p>
+        <button type="button" class="btn btn-secondary" (click)="load()">Try again</button>
+      </div>
+    }
+    @case ('loaded') {
+      @if (result(); as page) {
+        @if (page.total === 0) {
+          <p class="empty" data-testid="no-admin-appointments">
+            No appointments match these filters.
+          </p>
+        } @else {
+          <p class="muted" role="status" data-testid="admin-appointments-count">
+            {{ page.total }} appointment(s)
+          </p>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th scope="col">Date</th>
+                  <th scope="col">Time</th>
+                  <th scope="col">Doctor</th>
+                  <th scope="col">Patient</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (a of page.items; track a.id) {
+                  <tr data-testid="admin-appointment" [attr.data-id]="a.id">
+                    <td>{{ dateLabel(a.date) }}</td>
+                    <td>{{ a.time }}</td>
+                    <td>{{ a.doctor.name }}</td>
+                    <td>{{ a.patient.name }}</td>
+                    <td>
+                      <span class="status" [attr.data-status]="a.status" data-testid="status">{{
+                        statusLabel(a.status)
+                      }}</span>
+                    </td>
+                    <td class="actions">
+                      @if (a.status === 'BOOKED') {
+                        @if (confirmingId() === a.id) {
+                          <button
+                            type="button"
+                            class="btn btn-danger"
+                            [disabled]="busyId() === a.id"
+                            (click)="cancel(a)"
+                          >
+                            {{ busyId() === a.id ? 'Cancelling…' : 'Yes, cancel' }}
+                          </button>
+                          <button type="button" class="btn btn-secondary" (click)="keep()">
+                            No
+                          </button>
+                        } @else {
+                          <button type="button" class="btn btn-secondary" (click)="askCancel(a.id)">
+                            Cancel
+                          </button>
+                        }
+                      }
+                      @if (rowError()?.id === a.id) {
+                        <p class="field-error" role="alert" data-testid="admin-row-error">
+                          {{ rowError()?.message }}
+                        </p>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (page.totalPages > 1) {
+            <nav class="pager" aria-label="Appointment pages">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                [disabled]="page.page <= 1"
+                (click)="goToPage(page.page - 1)"
+              >
+                Previous
+              </button>
+              <span data-testid="admin-page-info"
+                >Page {{ page.page }} of {{ page.totalPages }}</span
+              >
+              <button
+                type="button"
+                class="btn btn-secondary"
+                [disabled]="page.page >= page.totalPages"
+                (click)="goToPage(page.page + 1)"
+              >
+                Next
+              </button>
+            </nav>
+          }
+        }
+      }
+    }
+  }
+</div>

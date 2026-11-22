@@ -44,7 +44,10 @@
             <dt>Time</dt>
             <dd>{{ s.time }} ({{ d.slotMinutes }} minutes)</dd>
             <dt>Fee</dt>
-            <dd>{{ d.fee | currency: 'INR' : 'symbol' : '1.0-2' }} (pay at the clinic)</dd>
+            <dd>
+              {{ d.fee | currency: 'INR' : 'symbol' : (d.fee % 1 ? '1.2-2' : '1.0-0') }} (pay at the
+              clinic)
+            </dd>
           </dl>
 
           <p class="hint">You can cancel or reschedule up to 2 hours before the appointment.</p>

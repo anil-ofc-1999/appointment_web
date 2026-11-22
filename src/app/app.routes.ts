@@ -57,5 +57,11 @@ export const routes: Routes = [
       import('./pages/doctor-dashboard/doctor-dashboard').then((m) => m.DoctorDashboard),
     title: 'Doctor dashboard · Doctor Appointments',
   },
+  {
+    path: 'admin',
+    canActivate: [authGuard, roleGuard('ADMIN')],
+    loadComponent: () => import('./pages/admin/admin-panel').then((m) => m.AdminPanel),
+    title: 'Admin panel · Doctor Appointments',
+  },
   { path: '**', redirectTo: '' },
 ];

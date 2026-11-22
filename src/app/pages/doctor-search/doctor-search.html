@@ -93,8 +93,11 @@
                   <h2>{{ doctor.name }}</h2>
                   <p class="specialization">{{ doctor.specialization.name }}</p>
                   <p class="meta">
-                    Fee: {{ doctor.fee | currency: 'INR' : 'symbol' : '1.0-2' }} ·
-                    {{ doctor.slotMinutes }} min slots
+                    Fee:
+                    {{
+                      doctor.fee | currency: 'INR' : 'symbol' : (doctor.fee % 1 ? '1.2-2' : '1.0-0')
+                    }}
+                    · {{ doctor.slotMinutes }} min slots
                   </p>
                   @if (doctor.bio) {
                     <p class="bio">{{ doctor.bio }}</p>

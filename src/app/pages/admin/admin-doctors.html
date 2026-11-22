@@ -1,0 +1,214 @@
+<div class="section-head">
+  <h2>Doctors</h2>
+  <button type="button" class="btn btn-primary inline" (click)="toggleAdd()">
+    {{ showAdd() ? 'Close' : 'Add doctor' }}
+  </button>
+</div>
+
+@if (notice(); as n) {
+  <p
+    class="alert"
+    [class.alert-success]="n.kind === 'success'"
+    [class.alert-error]="n.kind === 'error'"
+    role="status"
+    data-testid="doctors-notice"
+  >
+    {{ n.text }}
+  </p>
+}
+
+@if (showAdd()) {
+  <form
+    class="panel-form"
+    [formGroup]="addForm"
+    (ngSubmit)="addDoctor()"
+    novalidate
+    data-testid="add-doctor-form"
+  >
+    <h3>New doctor</h3>
+    <div class="grid">
+      <div class="field">
+        <label for="new-name">Full name</label>
+        <input id="new-name" formControlName="name" [attr.aria-invalid]="!!addError('name')" />
+        @if (addError('name'); as m) {
+          <p class="field-error">{{ m }}</p>
+        }
+      </div>
+      <div class="field">
+        <label for="new-email">Login email</label>
+        <input
+          id="new-email"
+          type="email"
+          formControlName="email"
+          [attr.aria-invalid]="!!addError('email')"
+        />
+        @if (addError('email'); as m) {
+          <p class="field-error">{{ m }}</p>
+        }
+      </div>
+      <div class="field">
+        <label for="new-password">First password</label>
+        <input
+          id="new-password"
+          type="password"
+          formControlName="password"
+          autocomplete="new-password"
+          [attr.aria-invalid]="!!addError('password')"
+        />
+        @if (addError('password'); as m) {
+          <p class="field-error">{{ m }}</p>
+        }
+      </div>
+      <div class="field">
+        <label for="new-specialization">Specialization</label>
+        <select
+          id="new-specialization"
+          formControlName="specializationId"
+          [attr.aria-invalid]="!!addError('specializationId')"
+        >
+          <option value="">Choose…</option>
+          @for (s of activeSpecializations(); track s.id) {
+            <option [value]="s.id">{{ s.name }}</option>
+          }
+        </select>
+        @if (addError('specializationId'); as m) {
+          <p class="field-error">{{ m }}</p>
+        }
+      </div>
+      <div class="field">
+        <label for="new-fee">Fee (₹)</label>
+        <input
+          id="new-fee"
+          inputmode="decimal"
+          formControlName="fee"
+          [attr.aria-invalid]="!!addError('fee')"
+        />
+        @if (addError('fee'); as m) {
+          <p class="field-error">{{ m }}</p>
+        }
+      </div>
+      <div class="field">
+        <label for="new-slot">Slot length</label>
+        <select id="new-slot" formControlName="slotMinutes">
+          <option value="30">30 minutes</option>
+          <option value="15">15 minutes</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="new-bio">Bio <span class="optional">(optional)</span></label>
+      <textarea id="new-bio" rows="2" formControlName="bio"></textarea>
+      @if (addError('bio'); as m) {
+        <p class="field-error">{{ m }}</p>
+      }
+    </div>
+    <button type="submit" class="btn btn-primary inline" [disabled]="adding()">
+      {{ adding() ? 'Saving…' : 'Save doctor' }}
+    </button>
+  </form>
+}
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="muted" role="status">Loading doctors…</p>
+  }
+  @case ('error') {
+    <div class="alert alert-error" role="alert" data-testid="admin-doctors-error">
+      <p>Could not load doctors.</p>
+      <button type="button" class="btn btn-secondary" (click)="load()">Try again</button>
+    </div>
+  }
+  @case ('loaded') {
+    @if (doctors().length === 0) {
+      <p class="empty" data-testid="no-admin-doctors">No doctors yet. Add the first one.</p>
+    } @else {
+      <ul class="cards">
+        @for (d of doctors(); track d.id) {
+          <li class="card" data-testid="admin-doctor" [attr.data-id]="d.id">
+            @if (editingId() === d.id) {
+              <form [formGroup]="editForm" (ngSubmit)="saveEdit(d)" novalidate class="edit-form">
+                <div class="grid">
+                  <div class="field">
+                    <label [for]="'edit-name-' + d.id">Name</label>
+                    <input [id]="'edit-name-' + d.id" formControlName="name" />
+                    @if (editError('name'); as m) {
+                      <p class="field-error">{{ m }}</p>
+                    }
+                  </div>
+                  <div class="field">
+                    <label [for]="'edit-spec-' + d.id">Specialization</label>
+                    <select [id]="'edit-spec-' + d.id" formControlName="specializationId">
+                      @for (s of activeSpecializations(); track s.id) {
+                        <option [value]="s.id">{{ s.name }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label [for]="'edit-fee-' + d.id">Fee (₹)</label>
+                    <input [id]="'edit-fee-' + d.id" inputmode="decimal" formControlName="fee" />
+                    @if (editError('fee'); as m) {
+                      <p class="field-error">{{ m }}</p>
+                    }
+                  </div>
+                  <div class="field">
+                    <label [for]="'edit-slot-' + d.id">Slot length</label>
+                    <select [id]="'edit-slot-' + d.id" formControlName="slotMinutes">
+                      <option value="30">30 minutes</option>
+                      <option value="15">15 minutes</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field">
+                  <label [for]="'edit-bio-' + d.id">Bio</label>
+                  <textarea [id]="'edit-bio-' + d.id" rows="2" formControlName="bio"></textarea>
+                </div>
+                <div class="row-actions">
+                  <button
+                    type="submit"
+                    class="btn btn-primary inline"
+                    [disabled]="busyId() === d.id"
+                  >
+                    Save changes
+                  </button>
+                  <button type="button" class="btn btn-secondary" (click)="cancelEdit()">
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            } @else {
+              <div class="card-head">
+                <h3>{{ d.name }}</h3>
+                <span
+                  class="status"
+                  [attr.data-status]="d.isActive ? 'ACTIVE' : 'INACTIVE'"
+                  data-testid="doctor-state"
+                >
+                  {{ d.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+              <p class="muted">
+                {{ d.specialization.name }} ·
+                {{ d.fee | currency: 'INR' : 'symbol' : (d.fee % 1 ? '1.2-2' : '1.0-0') }} ·
+                {{ d.slotMinutes }} min
+              </p>
+              <p class="muted small">
+                {{ d.email }}{{ d.accountActive ? '' : ' · login disabled' }}
+              </p>
+              <div class="row-actions">
+                <button type="button" class="btn btn-secondary" (click)="startEdit(d)">Edit</button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [disabled]="busyId() === d.id"
+                  (click)="toggleActive(d)"
+                >
+                  {{ d.isActive ? 'Deactivate' : 'Activate' }}
+                </button>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+}
