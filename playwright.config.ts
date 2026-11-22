@@ -51,6 +51,7 @@ export default defineConfig({
         PORT: String(API_PORT),
         // Many logins run in parallel from one IP; the 5/min limit has its own unit tests.
         LOGIN_RATE_LIMIT_PER_MINUTE: '1000',
+        REGISTER_RATE_LIMIT_PER_MINUTE: '1000',
       },
       reuseExistingServer: !process.env['CI'],
       timeout: 60_000,
