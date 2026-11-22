@@ -1,0 +1,148 @@
+<section class="doctor-detail">
+  <a routerLink="/doctors" class="back">← Back to doctors</a>
+
+  @switch (doctorState()) {
+    @case ('loading') {
+      <p class="muted" role="status" data-testid="doctor-loading">Loading doctor…</p>
+    }
+    @case ('not-found') {
+      <div class="empty" data-testid="doctor-not-found">
+        <h1>Doctor not found</h1>
+        <p>This doctor does not exist or is not taking appointments.</p>
+        <a class="btn btn-primary inline" routerLink="/doctors">Find another doctor</a>
+      </div>
+    }
+    @case ('error') {
+      <div class="alert alert-error" role="alert" data-testid="doctor-error">
+        <p>{{ doctorError() }}</p>
+        <button type="button" class="btn btn-secondary" (click)="retryDoctor()">Try again</button>
+      </div>
+    }
+    @case ('loaded') {
+      @if (doctor(); as d) {
+        <header class="profile" data-testid="doctor-profile">
+          <h1>{{ d.name }}</h1>
+          <p class="specialization">{{ d.specialization.name }}</p>
+          <p class="meta">
+            Consultation fee:
+            {{ d.fee | currency: 'INR' : 'symbol' : (d.fee % 1 ? '1.2-2' : '1.0-0') }} ·
+            {{ d.slotMinutes }} min per appointment
+          </p>
+          @if (d.bio) {
+            <p class="bio">{{ d.bio }}</p>
+          }
+        </header>
+
+        <fieldset class="dates">
+          <legend>Choose a date</legend>
+          <div class="day-buttons">
+            @for (day of quickDays(); track day.value) {
+              <button
+                type="button"
+                class="day"
+                [class.selected]="day.value === selectedDate()"
+                [attr.aria-pressed]="day.value === selectedDate()"
+                [attr.data-date]="day.value"
+                (click)="chooseDate(day.value)"
+              >
+                {{ day.label }}
+              </button>
+            }
+          </div>
+          <div class="field other-date">
+            <label for="doctor-detail-date">Or pick a date (up to 30 days ahead)</label>
+            <input
+              id="doctor-detail-date"
+              type="date"
+              [min]="range.min"
+              [max]="range.max"
+              [value]="selectedDate()"
+              (change)="chooseDate($any($event.target).value)"
+            />
+          </div>
+        </fieldset>
+
+        <section class="slots" [attr.aria-busy]="slotsState() === 'loading'">
+          <h2 data-testid="slots-heading">Slots on {{ selectedDateLabel() }}</h2>
+
+          @switch (slotsState()) {
+            @case ('loading') {
+              <p class="muted" role="status" data-testid="slots-loading">Loading slots…</p>
+            }
+            @case ('error') {
+              <div class="alert alert-error" role="alert" data-testid="slots-error">
+                <p>{{ slotsError() }}</p>
+                <button type="button" class="btn btn-secondary" (click)="retrySlots()">
+                  Try again
+                </button>
+              </div>
+            }
+            @case ('loaded') {
+              @if (slotsResult(); as result) {
+                @if (result.onLeave) {
+                  <p class="empty" data-testid="on-leave">
+                    {{ d.name }} is on leave on this day. Please choose another date.
+                  </p>
+                } @else if (result.slots.length === 0) {
+                  <p class="empty" data-testid="no-slots">
+                    No slots on this day. Please choose another date.
+                  </p>
+                } @else {
+                  <p class="muted" role="status" data-testid="slots-summary">
+                    {{ availableCount() }} of {{ result.slots.length }} slots available
+                  </p>
+                  @for (group of slotGroups(); track group.name) {
+                    <h3>{{ group.name }}</h3>
+                    <div class="slot-grid" role="group" [attr.aria-label]="group.name + ' slots'">
+                      @for (slot of group.slots; track slot.startAt) {
+                        <button
+                          type="button"
+                          class="slot"
+                          data-testid="slot"
+                          [class.booked]="slot.status === 'BOOKED'"
+                          [class.selected]="selectedSlot()?.startAt === slot.startAt"
+                          [disabled]="slot.status === 'BOOKED'"
+                          [attr.aria-pressed]="selectedSlot()?.startAt === slot.startAt"
+                          [attr.data-status]="slot.status"
+                          (click)="chooseSlot(slot)"
+                        >
+                          {{ slot.time }}
+                          @if (slot.status === 'BOOKED') {
+                            <span class="slot-note">Booked</span>
+                          }
+                        </button>
+                      }
+                    </div>
+                  }
+                  @if (availableCount() === 0) {
+                    <p class="empty" data-testid="fully-booked">
+                      All slots on this day are booked. Please choose another date.
+                    </p>
+                  }
+                }
+              }
+            }
+          }
+        </section>
+
+        <div class="booking-bar" data-testid="booking-bar">
+          @if (selectedSlot(); as slot) {
+            <p data-testid="selected-slot">
+              Selected: <strong>{{ selectedDateLabel() }}, {{ slot.time }}</strong>
+            </p>
+          } @else {
+            <p class="muted">Pick a free slot to continue.</p>
+          }
+          <button
+            type="button"
+            class="btn btn-primary inline"
+            [disabled]="!selectedSlot()"
+            (click)="continueToBooking()"
+          >
+            Continue to booking
+          </button>
+        </div>
+      }
+    }
+  }
+</section>

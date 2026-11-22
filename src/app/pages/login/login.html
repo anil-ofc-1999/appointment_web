@@ -1,0 +1,69 @@
+<section class="auth-card">
+  <h1>Log in</h1>
+
+  @if (registered()) {
+    <p class="alert alert-success" role="status" data-testid="registered-message">
+      Account created. Please log in.
+    </p>
+  }
+  @if (reason() === 'expired') {
+    <p class="alert alert-info" role="status" data-testid="reason-message">
+      Your session has expired. Please log in again.
+    </p>
+  } @else if (reason() === 'login-required') {
+    <p class="alert alert-info" role="status" data-testid="reason-message">
+      Please log in to continue.
+    </p>
+  }
+  @if (formError()) {
+    <p class="alert alert-error" role="alert" data-testid="form-error">{{ formError() }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="field">
+      <label for="login-email">Email</label>
+      <input
+        id="login-email"
+        type="email"
+        formControlName="email"
+        autocomplete="email"
+        [attr.aria-invalid]="!!fieldError('email')"
+        [attr.aria-describedby]="fieldError('email') ? 'login-email-error' : null"
+      />
+      @if (fieldError('email'); as message) {
+        <p id="login-email-error" class="field-error">{{ message }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="login-password">Password</label>
+      <div class="password-row">
+        <input
+          id="login-password"
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="password"
+          autocomplete="current-password"
+          [attr.aria-invalid]="!!fieldError('password')"
+          [attr.aria-describedby]="fieldError('password') ? 'login-password-error' : null"
+        />
+        <button
+          type="button"
+          class="btn-link"
+          (click)="showPassword.set(!showPassword())"
+          [attr.aria-pressed]="showPassword()"
+        >
+          {{ showPassword() ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+      @if (fieldError('password'); as message) {
+        <p id="login-password-error" class="field-error">{{ message }}</p>
+      }
+    </div>
+
+    <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+      {{ submitting() ? 'Logging in…' : 'Log in' }}
+    </button>
+  </form>
+
+  <p class="switch">New patient? <a routerLink="/register">Create an account</a></p>
+</section>

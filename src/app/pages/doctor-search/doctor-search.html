@@ -1,0 +1,139 @@
+<section class="doctor-search">
+  <h1>Find a doctor</h1>
+
+  <form class="filters" role="search" (submit)="submitSearch($event)">
+    <div class="field">
+      <label for="doctor-search-text">Doctor name</label>
+      <input
+        id="doctor-search-text"
+        type="search"
+        placeholder="e.g. Meera"
+        autocomplete="off"
+        [attr.maxlength]="searchMaxLength"
+        [value]="searchText()"
+        (input)="onType($any($event.target).value)"
+      />
+    </div>
+
+    <div class="field">
+      <label for="doctor-search-specialization">Specialization</label>
+      <select
+        id="doctor-search-specialization"
+        (change)="onSpecializationChange($any($event.target).value)"
+      >
+        <option value="" [selected]="criteria().specializationId === null">
+          All specializations
+        </option>
+        @for (spec of specializations(); track spec.id) {
+          <option [value]="spec.id" [selected]="spec.id === criteria().specializationId">
+            {{ spec.name }}
+          </option>
+        }
+      </select>
+      @if (specializationsError()) {
+        <p class="hint" data-testid="specializations-error">
+          Could not load specializations. You can still search by name.
+        </p>
+      }
+    </div>
+
+    @if (hasFilters()) {
+      <button type="button" class="btn btn-secondary" (click)="clearFilters()">
+        Clear filters
+      </button>
+    }
+  </form>
+
+  <div class="results" [attr.aria-busy]="state() === 'loading'">
+    @switch (state()) {
+      @case ('loading') {
+        <p class="muted" role="status" data-testid="loading">Loading doctors…</p>
+      }
+      @case ('error') {
+        <div class="alert alert-error" role="alert" data-testid="search-error">
+          <p>{{ errorMessage() }}</p>
+          <button type="button" class="btn btn-secondary" (click)="retry()">Try again</button>
+        </div>
+      }
+      @case ('loaded') {
+        @if (result(); as page) {
+          @if (page.total === 0) {
+            <div class="empty" data-testid="no-results">
+              <p>
+                No doctors found
+                @if (criteria().search) {
+                  for “{{ criteria().search }}”
+                }
+                @if (selectedSpecializationName(); as spec) {
+                  in {{ spec }}
+                }
+                .
+              </p>
+              @if (hasFilters()) {
+                <button type="button" class="btn btn-secondary" (click)="clearFilters()">
+                  Show all doctors
+                </button>
+              }
+            </div>
+          } @else if (page.items.length === 0) {
+            <div class="empty" data-testid="page-out-of-range">
+              <p>This page is empty.</p>
+              <button type="button" class="btn btn-secondary" (click)="goToPage(1)">
+                Go to the first page
+              </button>
+            </div>
+          } @else {
+            <p class="muted" role="status" data-testid="result-count">
+              {{ page.total }} {{ page.total === 1 ? 'doctor' : 'doctors' }} found
+            </p>
+
+            <ul class="doctor-list">
+              @for (doctor of page.items; track doctor.id) {
+                <li class="doctor-card" data-testid="doctor-card">
+                  <h2>{{ doctor.name }}</h2>
+                  <p class="specialization">{{ doctor.specialization.name }}</p>
+                  <p class="meta">
+                    Fee:
+                    {{
+                      doctor.fee | currency: 'INR' : 'symbol' : (doctor.fee % 1 ? '1.2-2' : '1.0-0')
+                    }}
+                    · {{ doctor.slotMinutes }} min slots
+                  </p>
+                  @if (doctor.bio) {
+                    <p class="bio">{{ doctor.bio }}</p>
+                  }
+                  <a class="btn btn-primary" [routerLink]="['/doctors', doctor.id]">
+                    View available slots
+                    <span class="visually-hidden">for {{ doctor.name }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+
+            @if (page.totalPages > 1) {
+              <nav class="pager" aria-label="Doctor list pages">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [disabled]="page.page <= 1"
+                  (click)="goToPage(page.page - 1)"
+                >
+                  Previous
+                </button>
+                <span data-testid="page-info">Page {{ page.page }} of {{ page.totalPages }}</span>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [disabled]="page.page >= page.totalPages"
+                  (click)="goToPage(page.page + 1)"
+                >
+                  Next
+                </button>
+              </nav>
+            }
+          }
+        }
+      }
+    }
+  </div>
+</section>

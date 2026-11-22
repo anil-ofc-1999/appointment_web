@@ -1,0 +1,122 @@
+<section class="my-appointments">
+  <div class="title-row">
+    <h1>My appointments</h1>
+    <a class="btn btn-primary inline" routerLink="/doctors">Book an appointment</a>
+  </div>
+
+  @if (notice(); as message) {
+    <p class="alert alert-success" role="status" data-testid="notice">{{ message }}</p>
+  }
+
+  <div class="tabs" role="tablist" aria-label="Appointments">
+    <button
+      type="button"
+      role="tab"
+      id="tab-upcoming"
+      [attr.aria-selected]="activeTab() === 'upcoming'"
+      [class.active]="activeTab() === 'upcoming'"
+      (click)="showTab('upcoming')"
+    >
+      Upcoming ({{ list().upcoming.length }})
+    </button>
+    <button
+      type="button"
+      role="tab"
+      id="tab-past"
+      [attr.aria-selected]="activeTab() === 'past'"
+      [class.active]="activeTab() === 'past'"
+      (click)="showTab('past')"
+    >
+      Past ({{ list().past.length }})
+    </button>
+  </div>
+
+  <div
+    role="tabpanel"
+    [attr.aria-labelledby]="'tab-' + activeTab()"
+    [attr.aria-busy]="state() === 'loading'"
+  >
+    @switch (state()) {
+      @case ('loading') {
+        <p class="muted" role="status" data-testid="appointments-loading">
+          Loading your appointments…
+        </p>
+      }
+      @case ('error') {
+        <div class="alert alert-error" role="alert" data-testid="appointments-error">
+          <p>{{ loadError() }}</p>
+          <button type="button" class="btn btn-secondary" (click)="load()">Try again</button>
+        </div>
+      }
+      @case ('loaded') {
+        @if (shown().length === 0) {
+          <div class="empty" data-testid="no-appointments">
+            @if (activeTab() === 'upcoming') {
+              <p>You have no upcoming appointments.</p>
+              <a class="btn btn-primary inline" routerLink="/doctors">Find a doctor</a>
+            } @else {
+              <p>No past appointments yet.</p>
+            }
+          </div>
+        } @else {
+          <ul class="list">
+            @for (a of shown(); track a.id) {
+              <li class="appointment" data-testid="appointment" [attr.data-id]="a.id">
+                <div class="info">
+                  <h2>{{ a.doctor.name }}</h2>
+                  <p class="specialization">{{ a.doctor.specialization }}</p>
+                  <p class="when">{{ dateLabel(a.date) }} at {{ a.time }}</p>
+                </div>
+                <span class="status" [attr.data-status]="a.status" data-testid="status">
+                  {{ statusLabel(a.status) }}
+                </span>
+
+                @if (activeTab() === 'upcoming') {
+                  <div class="actions">
+                    @if (canChange(a)) {
+                      @if (confirmingId() === a.id) {
+                        <p class="confirm" role="alert" data-testid="confirm-cancel">
+                          Cancel this appointment?
+                        </p>
+                        <button
+                          type="button"
+                          class="btn btn-danger"
+                          [disabled]="cancellingId() === a.id"
+                          (click)="confirmCancel(a)"
+                        >
+                          {{ cancellingId() === a.id ? 'Cancelling…' : 'Yes, cancel' }}
+                        </button>
+                        <button type="button" class="btn btn-secondary" (click)="keep()">
+                          No, keep it
+                        </button>
+                      } @else {
+                        <a
+                          class="btn btn-secondary"
+                          [routerLink]="['/appointments', a.id, 'reschedule']"
+                        >
+                          Reschedule
+                        </a>
+                        <button type="button" class="btn btn-secondary" (click)="askCancel(a.id)">
+                          Cancel
+                        </button>
+                      }
+                    } @else {
+                      <p class="muted small" data-testid="locked">
+                        Changes are closed less than 2 hours before the appointment.
+                      </p>
+                    }
+                  </div>
+                  @if (actionError()?.id === a.id) {
+                    <p class="alert alert-error" role="alert" data-testid="action-error">
+                      {{ actionError()?.message }}
+                    </p>
+                  }
+                }
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
+  </div>
+</section>

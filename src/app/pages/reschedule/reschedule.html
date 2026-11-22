@@ -1,0 +1,142 @@
+<section class="reschedule">
+  <a routerLink="/appointments" class="back">← Back to my appointments</a>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted" role="status" data-testid="reschedule-loading">Loading…</p>
+    }
+    @case ('not-found') {
+      <div class="empty" data-testid="reschedule-not-found">
+        <h1>Appointment not found</h1>
+        <p>This appointment does not exist or is not yours.</p>
+      </div>
+    }
+    @case ('error') {
+      <div class="alert alert-error" role="alert" data-testid="reschedule-load-error">
+        <p>{{ loadError() }}</p>
+        <button type="button" class="btn btn-secondary" (click)="reloadAppointment()">
+          Try again
+        </button>
+      </div>
+    }
+    @case ('locked') {
+      <div class="empty" data-testid="reschedule-locked">
+        <h1>This appointment can no longer be changed</h1>
+        <p>
+          Appointments can be changed only while they are booked and at least 2 hours before they
+          start.
+        </p>
+      </div>
+    }
+    @case ('ready') {
+      @if (current(); as a) {
+        <h1>Reschedule appointment</h1>
+        <p class="current" data-testid="current-appointment">
+          Now: <strong>{{ a.doctor.name }}</strong> on {{ dateLabel(a.date) }} at {{ a.time }}
+        </p>
+
+        <fieldset class="dates">
+          <legend>Choose a new date</legend>
+          <div class="day-buttons">
+            @for (day of quickDays(); track day.value) {
+              <button
+                type="button"
+                class="day"
+                [class.selected]="day.value === selectedDate()"
+                [attr.aria-pressed]="day.value === selectedDate()"
+                [attr.data-date]="day.value"
+                (click)="chooseDate(day.value)"
+              >
+                {{ day.label }}
+              </button>
+            }
+          </div>
+          <div class="field">
+            <label for="reschedule-date">Or pick a date (up to 30 days ahead)</label>
+            <input
+              id="reschedule-date"
+              type="date"
+              [min]="range.min"
+              [max]="range.max"
+              [value]="selectedDate()"
+              (change)="chooseDate($any($event.target).value)"
+            />
+          </div>
+        </fieldset>
+
+        <section [attr.aria-busy]="slotsState() === 'loading'">
+          <h2>New time on {{ dateLabel(selectedDate()) }}</h2>
+          @switch (slotsState()) {
+            @case ('loading') {
+              <p class="muted" role="status">Loading slots…</p>
+            }
+            @case ('error') {
+              <div class="alert alert-error" role="alert" data-testid="reschedule-slots-error">
+                <p>{{ slotsError() }}</p>
+                <button type="button" class="btn btn-secondary" (click)="retrySlots()">
+                  Try again
+                </button>
+              </div>
+            }
+            @case ('loaded') {
+              @if (slots(); as s) {
+                @if (s.onLeave) {
+                  <p class="empty" data-testid="on-leave">
+                    The doctor is on leave on this day. Please choose another date.
+                  </p>
+                } @else if (s.slots.length === 0) {
+                  <p class="empty" data-testid="no-slots">No slots on this day.</p>
+                } @else {
+                  <div class="slot-grid" role="group" aria-label="Slots">
+                    @for (slot of s.slots; track slot.startAt) {
+                      <button
+                        type="button"
+                        class="slot"
+                        data-testid="slot"
+                        [class.current]="isCurrent(slot)"
+                        [class.selected]="selected()?.startAt === slot.startAt"
+                        [disabled]="slot.status === 'BOOKED' || isCurrent(slot)"
+                        [attr.aria-pressed]="selected()?.startAt === slot.startAt"
+                        (click)="choose(slot)"
+                      >
+                        {{ slot.time }}
+                        @if (isCurrent(slot)) {
+                          <span class="slot-note">Your time</span>
+                        } @else if (slot.status === 'BOOKED') {
+                          <span class="slot-note">Booked</span>
+                        }
+                      </button>
+                    }
+                  </div>
+                }
+              }
+            }
+          }
+        </section>
+
+        @if (saveError(); as err) {
+          <p class="alert alert-error" role="alert" data-testid="reschedule-error">
+            {{ err.message }}
+          </p>
+        }
+
+        <div class="actions">
+          @if (selected(); as slot) {
+            <p data-testid="new-time">
+              New time: <strong>{{ dateLabel(selectedDate()) }} at {{ slot.time }}</strong>
+            </p>
+          }
+          <button
+            type="button"
+            class="btn btn-primary inline"
+            [disabled]="!selected() || saving()"
+            (click)="save()"
+          >
+            {{ saving() ? 'Saving…' : 'Confirm new time' }}
+          </button>
+        </div>
+        <p class="hint">Your current booking stays until the new time is confirmed.</p>
+      }
+    }
+  }
+</section>
