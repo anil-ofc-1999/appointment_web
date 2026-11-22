@@ -77,12 +77,12 @@ E2E is not in CI yet (it needs the API repo and a database in the same job).
 
 ## Status
 
-| Screen (REQUIREMENTS §8)     | Status  |
-| ---------------------------- | ------- |
-| 1. Login / Register          | Done    |
-| 2. Doctor search             | Done    |
-| 3. Doctor detail + slot grid | Done    |
-| 4. Booking confirmation      | Done    |
-| 5. My Appointments           | Done    |
-| 6. Doctor dashboard          | Next    |
-| 7. Admin panel               | Planned |
+| Screen (REQUIREMENTS §8)     | Status |
+| ---------------------------- | ------ |
+| 1. Login / Register          | Done   |
+| 2. Doctor search             | Done   |
+| 3. Doctor detail + slot grid | Done   |
+| 4. Booking confirmation      | Done   |
+| 5. My Appointments           | Done   |
+| 6. Doctor dashboard          | Done   |
+| 7. Admin panel               | Next   |

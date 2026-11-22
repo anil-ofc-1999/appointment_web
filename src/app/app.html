@@ -7,6 +7,9 @@
       @if (user.role === 'PATIENT') {
         <a routerLink="/appointments" routerLinkActive="active">My appointments</a>
       }
+      @if (user.role === 'DOCTOR') {
+        <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+      }
       <span class="user" data-testid="current-user">{{ user.name }}</span>
       <button type="button" class="nav-button" (click)="logout()">Log out</button>
     } @else {

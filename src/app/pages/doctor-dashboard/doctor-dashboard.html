@@ -1,0 +1,319 @@
+<section class="dashboard">
+  <h1>Doctor dashboard</h1>
+
+  <div class="tabs" role="tablist" aria-label="Dashboard">
+    <button
+      type="button"
+      role="tab"
+      id="tab-appointments"
+      [attr.aria-selected]="activeTab() === 'appointments'"
+      [class.active]="activeTab() === 'appointments'"
+      (click)="showTab('appointments')"
+    >
+      Appointments
+    </button>
+    <button
+      type="button"
+      role="tab"
+      id="tab-schedule"
+      [attr.aria-selected]="activeTab() === 'schedule'"
+      [class.active]="activeTab() === 'schedule'"
+      (click)="showTab('schedule')"
+    >
+      Weekly schedule
+    </button>
+    <button
+      type="button"
+      role="tab"
+      id="tab-leaves"
+      [attr.aria-selected]="activeTab() === 'leaves'"
+      [class.active]="activeTab() === 'leaves'"
+      (click)="showTab('leaves')"
+    >
+      Leave days
+    </button>
+  </div>
+
+  @switch (activeTab()) {
+    @case ('appointments') {
+      <div role="tabpanel" aria-labelledby="tab-appointments">
+        <div class="day-bar">
+          <button type="button" class="btn btn-secondary" (click)="shiftDay(-1)">
+            ← Previous day
+          </button>
+          <div class="field">
+            <label for="dashboard-date">Date</label>
+            <input
+              id="dashboard-date"
+              type="date"
+              [value]="selectedDate()"
+              (change)="chooseDate($any($event.target).value)"
+            />
+          </div>
+          <button type="button" class="btn btn-secondary" (click)="shiftDay(1)">Next day →</button>
+          @if (selectedDate() !== today) {
+            <button type="button" class="btn-link" (click)="chooseDate(today)">Today</button>
+          }
+        </div>
+
+        <h2 data-testid="day-heading">{{ dateLabel(selectedDate()) }}</h2>
+
+        <div [attr.aria-busy]="dayState() === 'loading'">
+          @switch (dayState()) {
+            @case ('loading') {
+              <p class="muted" role="status">Loading appointments…</p>
+            }
+            @case ('error') {
+              <div class="alert alert-error" role="alert" data-testid="day-error">
+                <p>{{ dayError() }}</p>
+                <button type="button" class="btn btn-secondary" (click)="reloadDay()">
+                  Try again
+                </button>
+              </div>
+            }
+            @case ('loaded') {
+              @if (dayItems().length === 0) {
+                <p class="empty" data-testid="no-day-appointments">No appointments on this day.</p>
+              } @else {
+                <p class="muted" role="status" data-testid="day-summary">
+                  {{ dayItems().length }} appointment(s), {{ bookedCount() }} still booked
+                </p>
+                <table class="day-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Time</th>
+                      <th scope="col">Patient</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (a of dayItems(); track a.id) {
+                      <tr data-testid="day-row" [attr.data-id]="a.id">
+                        <td>{{ a.time }}</td>
+                        <td>{{ a.patient.name }}</td>
+                        <td>
+                          <span
+                            class="status"
+                            [attr.data-status]="a.status"
+                            data-testid="row-status"
+                            >{{ statusLabel(a.status) }}</span
+                          >
+                        </td>
+                        <td class="actions">
+                          @if (canClose(a)) {
+                            <button
+                              type="button"
+                              class="btn btn-secondary"
+                              [disabled]="busyId() === a.id"
+                              (click)="close(a, 'complete')"
+                            >
+                              Completed
+                            </button>
+                            <button
+                              type="button"
+                              class="btn btn-secondary"
+                              [disabled]="busyId() === a.id"
+                              (click)="close(a, 'no-show')"
+                            >
+                              No-show
+                            </button>
+                          } @else if (a.status === 'BOOKED') {
+                            <span class="muted small" data-testid="not-started"
+                              >After {{ a.time }}</span
+                            >
+                          }
+                          @if (rowError()?.id === a.id) {
+                            <p class="field-error" role="alert" data-testid="row-error">
+                              {{ rowError()?.message }}
+                            </p>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            }
+          }
+        </div>
+      </div>
+    }
+
+    @case ('schedule') {
+      <div role="tabpanel" aria-labelledby="tab-schedule">
+        <p class="hint">
+          Patients can book slots inside these hours. Changes do not cancel existing bookings.
+        </p>
+
+        @if (scheduleState() === 'error') {
+          <div class="alert alert-error" role="alert" data-testid="schedule-load-error">
+            <p>Could not load your schedule.</p>
+            <button type="button" class="btn btn-secondary" (click)="loadSchedule()">
+              Try again
+            </button>
+          </div>
+        } @else if (scheduleState() === 'loading') {
+          <p class="muted" role="status">Loading schedule…</p>
+        } @else {
+          <ul class="week">
+            @for (day of blocksByDay(); track day.dayOfWeek) {
+              <li data-testid="schedule-day" [attr.data-day]="day.dayOfWeek">
+                <strong>{{ day.name }}</strong>
+                @if (day.blocks.length === 0) {
+                  <span class="muted">Not working</span>
+                } @else {
+                  @for (b of day.blocks; track b.index) {
+                    <span class="block" data-testid="block">
+                      {{ b.startTime }}–{{ b.endTime }}
+                      <button
+                        type="button"
+                        class="btn-link"
+                        [attr.aria-label]="
+                          'Remove ' + day.name + ' ' + b.startTime + ' to ' + b.endTime
+                        "
+                        (click)="removeBlock(b.index)"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  }
+                }
+              </li>
+            }
+          </ul>
+
+          <fieldset class="add-block">
+            <legend>Add working hours</legend>
+            <div class="field">
+              <label for="block-day">Day</label>
+              <select id="block-day" (change)="setNewBlock('dayOfWeek', $any($event.target).value)">
+                @for (name of weekdays; track $index) {
+                  <option [value]="$index" [selected]="$index === newBlock().dayOfWeek">
+                    {{ name }}
+                  </option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="block-start">From</label>
+              <select
+                id="block-start"
+                (change)="setNewBlock('startTime', $any($event.target).value)"
+              >
+                @for (t of times; track t) {
+                  <option [value]="t" [selected]="t === newBlock().startTime">{{ t }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="block-end">To</label>
+              <select id="block-end" (change)="setNewBlock('endTime', $any($event.target).value)">
+                @for (t of times; track t) {
+                  <option [value]="t" [selected]="t === newBlock().endTime">{{ t }}</option>
+                }
+              </select>
+            </div>
+            <button type="button" class="btn btn-secondary" (click)="addBlock()">Add</button>
+            @if (newBlockError(); as message) {
+              <p class="field-error" role="alert" data-testid="block-error">{{ message }}</p>
+            }
+          </fieldset>
+
+          @if (scheduleMessage(); as m) {
+            <p
+              class="alert"
+              [class.alert-success]="m.kind === 'success'"
+              [class.alert-error]="m.kind === 'error'"
+              role="status"
+              data-testid="schedule-message"
+            >
+              {{ m.text }}
+            </p>
+          }
+
+          <div class="save-row">
+            @if (dirty()) {
+              <span class="muted" data-testid="unsaved">You have unsaved changes.</span>
+              <button type="button" class="btn btn-secondary" (click)="discardChanges()">
+                Discard
+              </button>
+            }
+            <button
+              type="button"
+              class="btn btn-primary inline"
+              [disabled]="!dirty() || savingSchedule()"
+              (click)="saveSchedule()"
+            >
+              {{ savingSchedule() ? 'Saving…' : 'Save schedule' }}
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    @case ('leaves') {
+      <div role="tabpanel" aria-labelledby="tab-leaves">
+        <p class="hint">No slots are offered on leave days.</p>
+
+        <div class="add-leave">
+          <div class="field">
+            <label for="leave-date">Leave date</label>
+            <input
+              id="leave-date"
+              type="date"
+              [min]="today"
+              [value]="leaveDate()"
+              (input)="leaveDate.set($any($event.target).value)"
+            />
+          </div>
+          <button
+            type="button"
+            class="btn btn-primary inline"
+            [disabled]="savingLeave()"
+            (click)="addLeave()"
+          >
+            {{ savingLeave() ? 'Adding…' : 'Add leave day' }}
+          </button>
+        </div>
+
+        @if (leaveMessage(); as m) {
+          <p
+            class="alert"
+            [class.alert-success]="m.kind === 'success'"
+            [class.alert-error]="m.kind === 'error'"
+            [class.alert-info]="m.kind === 'warning'"
+            role="status"
+            data-testid="leave-message"
+          >
+            {{ m.text }}
+          </p>
+        }
+
+        @if (leavesState() === 'error') {
+          <div class="alert alert-error" role="alert" data-testid="leaves-load-error">
+            <p>Could not load your leave days.</p>
+            <button type="button" class="btn btn-secondary" (click)="loadLeaves()">
+              Try again
+            </button>
+          </div>
+        } @else if (leavesState() === 'loaded') {
+          @if (leaves().length === 0) {
+            <p class="empty" data-testid="no-leaves">No upcoming leave days.</p>
+          } @else {
+            <ul class="leave-list">
+              @for (date of leaves(); track date) {
+                <li data-testid="leave" [attr.data-date]="date">
+                  {{ dateLabel(date) }}
+                  <button type="button" class="btn btn-secondary" (click)="removeLeave(date)">
+                    Remove
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        }
+      </div>
+    }
+  }
+</section>

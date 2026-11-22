@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
-import { loginResponse } from '../testing/fake-jwt';
+import { loginResponse, testUser } from '../testing/fake-jwt';
 import { App } from './app';
 import { AuthService } from './core/auth/auth.service';
 
@@ -75,5 +75,25 @@ describe('App shell — patient links', () => {
     expect(el.querySelector('nav a[href="/appointments"]')?.textContent).toContain(
       'My appointments',
     );
+  });
+});
+
+describe('App shell — doctor links', () => {
+  it('a doctor sees "Dashboard" and not "My appointments"', async () => {
+    localStorage.clear();
+    await TestBed.configureTestingModule({
+      imports: [App],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+    }).compileComponents();
+    TestBed.inject(AuthService).login({ email: 'd@example.com', password: 'x' }).subscribe();
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/v1/auth/login')
+      .flush(loginResponse(undefined, { ...testUser, role: 'DOCTOR' }));
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+
+    expect(el.querySelector('nav a[href="/dashboard"]')?.textContent).toContain('Dashboard');
+    expect(el.querySelector('nav a[href="/appointments"]')).toBeNull();
   });
 });

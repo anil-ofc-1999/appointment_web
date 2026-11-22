@@ -50,5 +50,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/reschedule/reschedule').then((m) => m.Reschedule),
     title: 'Reschedule · Doctor Appointments',
   },
+  {
+    path: 'dashboard',
+    canActivate: [authGuard, roleGuard('DOCTOR')],
+    loadComponent: () =>
+      import('./pages/doctor-dashboard/doctor-dashboard').then((m) => m.DoctorDashboard),
+    title: 'Doctor dashboard · Doctor Appointments',
+  },
   { path: '**', redirectTo: '' },
 ];

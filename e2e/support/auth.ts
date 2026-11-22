@@ -93,3 +93,38 @@ export async function bookAsMe(page: Page, doctorId: number, startAt: string): P
   expect(res.status(), await res.text()).toBe(201);
   return (await res.json()).appointment.id as number;
 }
+
+export interface DoctorAccount {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+  token: string;
+}
+
+/**
+ * Creates a doctor account the way an admin does (POST /doctors as the seed admin) and
+ * gives it a weekly schedule. The email matches the E2E cleanup pattern.
+ */
+export async function createDoctorAccount(
+  page: Page,
+  specializationId: number,
+  name: string,
+  schedule: { dayOfWeek: number; startTime: string; endTime: string }[],
+): Promise<DoctorAccount> {
+  const adminToken = await tokenViaApi(page, SEED_ADMIN.email, SEED_ADMIN.password);
+  const email = uniqueEmail('doctor');
+  const res = await page.request.post('/api/v1/doctors', {
+    data: { name, email, password: PASSWORD, specializationId, fee: 500, slotMinutes: 30 },
+    headers: { Authorization: `Bearer ${adminToken}` },
+  });
+  expect(res.status(), await res.text()).toBe(201);
+  const id = (await res.json()).doctor.id as number;
+  const token = await tokenViaApi(page, email, PASSWORD);
+  const put = await page.request.put('/api/v1/doctors/me/schedule', {
+    data: { blocks: schedule },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  expect(put.status(), await put.text()).toBe(200);
+  return { id, name, email, password: PASSWORD, token };
+}
