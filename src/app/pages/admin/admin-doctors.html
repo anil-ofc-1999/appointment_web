@@ -48,13 +48,16 @@
       </div>
       <div class="field">
         <label for="new-password">First password</label>
-        <input
-          id="new-password"
-          type="password"
-          formControlName="password"
-          autocomplete="new-password"
-          [attr.aria-invalid]="!!addError('password')"
-        />
+        <div class="password-field">
+          <input
+            id="new-password"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            autocomplete="new-password"
+            [attr.aria-invalid]="!!addError('password')"
+          />
+          <app-password-toggle [(visible)]="showPassword" controls="new-password" />
+        </div>
         @if (addError('password'); as m) {
           <p class="field-error">{{ m }}</p>
         }

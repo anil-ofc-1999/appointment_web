@@ -54,18 +54,21 @@
 
     <div class="field">
       <label for="register-password">Password</label>
-      <input
-        id="register-password"
-        type="password"
-        formControlName="password"
-        autocomplete="new-password"
-        [attr.aria-invalid]="!!fieldError('password')"
-        [attr.aria-describedby]="
-          fieldError('password')
-            ? 'register-password-hint register-password-error'
-            : 'register-password-hint'
-        "
-      />
+      <div class="password-field">
+        <input
+          id="register-password"
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="password"
+          autocomplete="new-password"
+          [attr.aria-invalid]="!!fieldError('password')"
+          [attr.aria-describedby]="
+            fieldError('password')
+              ? 'register-password-hint register-password-error'
+              : 'register-password-hint'
+          "
+        />
+        <app-password-toggle [(visible)]="showPassword" controls="register-password" />
+      </div>
       <p id="register-password-hint" class="hint">
         At least {{ passwordMin }} characters, with a letter and a number.
       </p>
@@ -76,14 +79,17 @@
 
     <div class="field">
       <label for="register-confirm">Confirm password</label>
-      <input
-        id="register-confirm"
-        type="password"
-        formControlName="confirmPassword"
-        autocomplete="new-password"
-        [attr.aria-invalid]="!!fieldError('confirmPassword')"
-        [attr.aria-describedby]="fieldError('confirmPassword') ? 'register-confirm-error' : null"
-      />
+      <div class="password-field">
+        <input
+          id="register-confirm"
+          [type]="showConfirm() ? 'text' : 'password'"
+          formControlName="confirmPassword"
+          autocomplete="new-password"
+          [attr.aria-invalid]="!!fieldError('confirmPassword')"
+          [attr.aria-describedby]="fieldError('confirmPassword') ? 'register-confirm-error' : null"
+        />
+        <app-password-toggle [(visible)]="showConfirm" controls="register-confirm" />
+      </div>
       @if (fieldError('confirmPassword'); as message) {
         <p id="register-confirm-error" class="field-error">{{ message }}</p>
       }

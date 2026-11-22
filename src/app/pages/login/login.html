@@ -37,7 +37,7 @@
 
     <div class="field">
       <label for="login-password">Password</label>
-      <div class="password-row">
+      <div class="password-field">
         <input
           id="login-password"
           [type]="showPassword() ? 'text' : 'password'"
@@ -46,14 +46,7 @@
           [attr.aria-invalid]="!!fieldError('password')"
           [attr.aria-describedby]="fieldError('password') ? 'login-password-error' : null"
         />
-        <button
-          type="button"
-          class="btn-link"
-          (click)="showPassword.set(!showPassword())"
-          [attr.aria-pressed]="showPassword()"
-        >
-          {{ showPassword() ? 'Hide' : 'Show' }}
-        </button>
+        <app-password-toggle [(visible)]="showPassword" controls="login-password" />
       </div>
       @if (fieldError('password'); as message) {
         <p id="login-password-error" class="field-error">{{ message }}</p>

@@ -7,13 +7,14 @@ import { parseApiError } from '../../core/api-error';
 import { safeReturnUrl } from '../../core/auth/auth.guards';
 import { AuthService } from '../../core/auth/auth.service';
 import { emailValidator, errorMessage, requiredTrimmed } from '../../core/auth/validators';
+import { PasswordToggle } from '../../shared/password-toggle';
 
 type LoginField = 'email' | 'password';
 
 /** Screen 1 (REQUIREMENTS §8): Login — FR-1.5. */
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, PasswordToggle],
   templateUrl: './login.html',
 })
 export class Login implements OnInit {

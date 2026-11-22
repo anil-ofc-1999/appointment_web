@@ -82,9 +82,42 @@ a {
   }
 }
 
-.password-row {
-  display: flex;
-  gap: 0.5rem;
+/* Password input with the eye button inside it on the right (app-password-toggle). */
+.password-field {
+  position: relative;
+
+  input {
+    padding-right: 2.75rem;
+  }
+
+  app-password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 0.25rem;
+    transform: translateY(-50%);
+  }
+}
+
+.password-toggle {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  color: var(--color-muted);
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-primary);
+    background: #e8f1fb;
+  }
+
+  &[aria-pressed='true'] {
+    color: var(--color-primary);
+  }
 }
 
 .optional,
