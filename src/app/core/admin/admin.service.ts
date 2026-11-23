@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import { Appointment, AppointmentStatus } from '../appointments/appointment.models';
+import { User } from '../auth/auth.models';
 import { Doctor, Page, Specialization } from '../doctors/doctor.models';
 
 /** Doctor as the admin sees it (FR-2.2, FR-2.3): with login email and account status. */
@@ -45,6 +46,13 @@ export const ADMIN_PAGE_SIZE = 20;
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private readonly http = inject(HttpClient);
+
+  /** D-35: new password for a doctor / patient (admins are refused by the API). */
+  resetPassword(email: string, newPassword: string): Observable<User> {
+    return this.http
+      .post<{ user: User }>('/api/v1/users/reset-password', { email, newPassword })
+      .pipe(map((res) => res.user));
+  }
 
   /** All doctors including inactive ones (one page of up to 50). */
   doctors(page = 1): Observable<Page<AdminDoctor>> {

@@ -135,7 +135,7 @@ test('admin panel', async ({ page }) => {
   await login(page, SEED_ADMIN.email, SEED_ADMIN.password);
   await expect(page.getByTestId('welcome')).toBeVisible();
 
-  for (const tab of ['', '?tab=doctors', '?tab=specializations']) {
+  for (const tab of ['', '?tab=doctors', '?tab=specializations', '?tab=accounts']) {
     await page.goto(`/admin${tab}`);
     await expect(page.getByRole('heading', { name: 'Admin panel' })).toBeVisible();
     await page.waitForLoadState('networkidle');

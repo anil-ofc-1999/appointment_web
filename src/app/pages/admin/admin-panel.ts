@@ -1,16 +1,18 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 
+import { AdminAccounts } from './admin-accounts';
 import { AdminAppointments } from './admin-appointments';
 import { AdminDoctors } from './admin-doctors';
 import { AdminSpecializations } from './admin-specializations';
 
-type Tab = 'appointments' | 'doctors' | 'specializations';
+type Tab = 'appointments' | 'doctors' | 'specializations' | 'accounts';
+const TABS: Tab[] = ['appointments', 'doctors', 'specializations', 'accounts'];
 
 /** Screen 7 (REQUIREMENTS §8): Admin panel — doctors, specializations, all appointments. */
 @Component({
   selector: 'app-admin-panel',
-  imports: [AdminAppointments, AdminDoctors, AdminSpecializations],
+  imports: [AdminAccounts, AdminAppointments, AdminDoctors, AdminSpecializations],
   template: `
     <section class="admin">
       <h1>Admin panel</h1>
@@ -36,6 +38,9 @@ type Tab = 'appointments' | 'doctors' | 'specializations';
           @case ('specializations') {
             <app-admin-specializations />
           }
+          @case ('accounts') {
+            <app-admin-accounts [email]="email() ?? ''" />
+          }
           @default {
             <app-admin-appointments />
           }
@@ -50,17 +55,18 @@ export class AdminPanel {
 
   /** Query param ?tab=. */
   readonly tab = input<string>();
+  /** Query param ?email= (Accounts tab, filled from a doctor's "Reset password"). */
+  readonly email = input<string>();
 
   protected readonly tabs: { id: Tab; label: string }[] = [
     { id: 'appointments', label: 'Appointments' },
     { id: 'doctors', label: 'Doctors' },
     { id: 'specializations', label: 'Specializations' },
+    { id: 'accounts', label: 'Accounts' },
   ];
 
   protected readonly activeTab = computed<Tab>(() =>
-    this.tab() === 'doctors' || this.tab() === 'specializations'
-      ? (this.tab() as Tab)
-      : 'appointments',
+    TABS.includes(this.tab() as Tab) ? (this.tab() as Tab) : 'appointments',
   );
 
   protected show(tab: Tab): void {
