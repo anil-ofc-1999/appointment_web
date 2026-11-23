@@ -24,7 +24,7 @@ const MESSAGES: Record<string, string> = {
   WRONG_PASSWORD: 'Your current password is incorrect.',
   ACCOUNT_DISABLED: 'This account is disabled. Please contact the clinic.',
   EMAIL_TAKEN: 'An account with this email already exists. Try logging in instead.',
-  TOO_MANY_REQUESTS: 'Too many login attempts. Please wait a minute and try again.',
+  TOO_MANY_REQUESTS: 'Too many attempts. Please wait a minute and try again.',
   TOKEN_EXPIRED: 'Your session has expired. Please log in again.',
   UNAUTHORIZED: 'Please log in to continue.',
   FORBIDDEN: 'You do not have permission to do this.',
