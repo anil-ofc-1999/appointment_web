@@ -17,6 +17,7 @@
         <a routerLink="/admin" routerLinkActive="active">Admin</a>
       }
       <span class="user" data-testid="current-user">{{ user.name }}</span>
+      <a routerLink="/account/password" routerLinkActive="active">Change password</a>
       <button type="button" class="nav-button" (click)="logout()">Log out</button>
     } @else {
       <a routerLink="/login" routerLinkActive="active">Log in</a>

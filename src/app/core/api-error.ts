@@ -21,6 +21,7 @@ export interface ParsedApiError {
 /** Friendlier text for codes the user can act on (REQUIREMENTS §8: clear messages). */
 const MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: 'Email or password is incorrect.',
+  WRONG_PASSWORD: 'Your current password is incorrect.',
   ACCOUNT_DISABLED: 'This account is disabled. Please contact the clinic.',
   EMAIL_TAKEN: 'An account with this email already exists. Try logging in instead.',
   TOO_MANY_REQUESTS: 'Too many login attempts. Please wait a minute and try again.',

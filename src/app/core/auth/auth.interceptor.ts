@@ -6,7 +6,8 @@ import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
 /** Login and register never need a token, and a 401 there is a normal answer. */
-const isAuthCall = (url: string) => url.startsWith('/api/v1/auth/');
+const PUBLIC_AUTH_CALLS = ['/api/v1/auth/login', '/api/v1/auth/register'];
+const isAuthCall = (url: string) => PUBLIC_AUTH_CALLS.includes(url.split('?')[0]);
 
 /**
  * Adds `Authorization: Bearer <token>` to API calls (FR-1.7).
