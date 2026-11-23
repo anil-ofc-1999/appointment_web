@@ -2,7 +2,14 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, map, tap } from 'rxjs';
 
-import { LoginRequest, LoginResponse, RegisterRequest, Session, User } from './auth.models';
+import {
+  ChangePasswordRequest,
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  Session,
+  User,
+} from './auth.models';
 
 export const SESSION_STORAGE_KEY = 'appointment.session';
 
@@ -36,13 +43,26 @@ export class AuthService {
   /** FR-1.5: logs in and keeps the token until it expires (FR-1.6). */
   login(request: LoginRequest): Observable<User> {
     return this.http.post<LoginResponse>('/api/v1/auth/login', request).pipe(
-      tap((res) => {
-        const expiresAt = tokenExpiry(res.accessToken);
-        if (expiresAt === null) throw new Error('Login returned an invalid token.');
-        this.save({ accessToken: res.accessToken, expiresAt, user: res.user });
-      }),
+      tap((res) => this.saveLogin(res)),
       map((res) => res.user),
     );
+  }
+
+  /**
+   * D-32: changes the logged-in user's password. The API signs out every older session
+   * and returns a fresh token, which replaces the current one so this tab stays logged in.
+   */
+  changePassword(request: ChangePasswordRequest): Observable<User> {
+    return this.http.post<LoginResponse>('/api/v1/auth/change-password', request).pipe(
+      tap((res) => this.saveLogin(res)),
+      map((res) => res.user),
+    );
+  }
+
+  private saveLogin(res: LoginResponse): void {
+    const expiresAt = tokenExpiry(res.accessToken);
+    if (expiresAt === null) throw new Error('Login returned an invalid token.');
+    this.save({ accessToken: res.accessToken, expiresAt, user: res.user });
   }
 
   logout(): void {

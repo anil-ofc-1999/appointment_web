@@ -29,6 +29,11 @@ export interface LoginResponse {
   user: User;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 /** What we keep in the browser after a successful login. */
 export interface Session {
   accessToken: string;

@@ -63,5 +63,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/admin/admin-panel').then((m) => m.AdminPanel),
     title: 'Admin panel · Doctor Appointments',
   },
+  {
+    // D-32: any logged-in user (patient, doctor, admin).
+    path: 'account/password',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/change-password/change-password').then((m) => m.ChangePassword),
+    title: 'Change password · Doctor Appointments',
+  },
   { path: '**', redirectTo: '' },
 ];

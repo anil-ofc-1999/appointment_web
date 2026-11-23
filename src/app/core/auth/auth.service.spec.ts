@@ -196,3 +196,45 @@ describe('AuthService session handling (FR-1.6)', () => {
     expect(stored()).toBeNull();
   });
 });
+
+describe('AuthService.changePassword (D-32)', () => {
+  it('posts both passwords and swaps in the fresh token from the API', () => {
+    const { auth, http } = setup();
+    auth.login({ email: testUser.email, password: 'Password123' }).subscribe();
+    http.expectOne('/api/v1/auth/login').flush(loginResponse(fakeJwt(3600, { n: 'old' })));
+    const fresh = fakeJwt(3600, { n: 'new' });
+
+    let user: unknown;
+    auth
+      .changePassword({ currentPassword: 'Password123', newPassword: 'BetterPass9' })
+      .subscribe((u) => (user = u));
+    const req = http.expectOne('/api/v1/auth/change-password');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      currentPassword: 'Password123',
+      newPassword: 'BetterPass9',
+    });
+    req.flush(loginResponse(fresh));
+
+    expect(user).toEqual(testUser);
+    expect(auth.token()).toBe(fresh);
+    expect((JSON.parse(stored() as string) as Session).accessToken).toBe(fresh);
+  });
+
+  it('keeps the current session when the change is rejected', () => {
+    const { auth, http } = setup();
+    auth.login({ email: testUser.email, password: 'Password123' }).subscribe();
+    const original = fakeJwt(3600, { n: 'old' });
+    http.expectOne('/api/v1/auth/login').flush(loginResponse(original));
+
+    auth
+      .changePassword({ currentPassword: 'wrong', newPassword: 'BetterPass9' })
+      .subscribe({ error: () => undefined });
+    http
+      .expectOne('/api/v1/auth/change-password')
+      .flush(apiError('WRONG_PASSWORD', 'no'), { status: 400, statusText: 'Bad Request' });
+
+    expect(auth.token()).toBe(original);
+    expect(auth.isLoggedIn()).toBe(true);
+  });
+});

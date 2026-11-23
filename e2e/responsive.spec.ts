@@ -42,6 +42,9 @@ test.beforeAll(async () => {
 // Viewports are set per check; the separate "mobile" project would only repeat this.
 test.beforeEach(() => {
   test.skip(test.info().project.name === 'mobile', 'covered by the widths below');
+  // Each test takes up to 16 full-page screenshots (4 pages × 4 widths): more than 30 s
+  // when the machine is busy.
+  test.setTimeout(90_000);
 });
 
 async function checkAllWidths(page: Page, label: string) {
@@ -105,6 +108,10 @@ test('patient pages', async ({ page }) => {
   await page.goto(`/appointments/${id}/reschedule`);
   await expect(page.getByTestId('slot').first()).toBeVisible();
   await checkAllWidths(page, 'reschedule');
+
+  await page.goto('/account/password');
+  await expect(page.getByRole('heading', { name: 'Change password' })).toBeVisible();
+  await checkAllWidths(page, 'change password');
 });
 
 test('doctor dashboard', async ({ page }) => {

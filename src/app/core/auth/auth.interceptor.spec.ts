@@ -61,6 +61,30 @@ describe('authInterceptor (FR-1.7)', () => {
     );
   });
 
+  it('DOES send the token to change-password (it needs the logged-in user)', () => {
+    const { http, backend } = setup({ loggedIn: true });
+
+    http.post('/api/v1/auth/change-password', {}).subscribe();
+
+    expect(
+      backend.expectOne('/api/v1/auth/change-password').request.headers.get('Authorization'),
+    ).toMatch(/^Bearer /);
+  });
+
+  it('a 401 from change-password (session revoked) logs out and goes to login', () => {
+    const { http, backend, auth, navigate } = setup({ loggedIn: true });
+
+    http.post('/api/v1/auth/change-password', {}).subscribe({ error: () => undefined });
+    backend
+      .expectOne('/api/v1/auth/change-password')
+      .flush(apiError('TOKEN_EXPIRED', 'changed'), { status: 401, statusText: 'Unauthorized' });
+
+    expect(auth.isLoggedIn()).toBe(false);
+    expect(navigate).toHaveBeenCalledWith(['/login'], {
+      queryParams: expect.objectContaining({ reason: 'expired' }),
+    });
+  });
+
   it.each(['/health', 'https://other.example.com/api/v1/me'])(
     'never sends the token outside our API (%s)',
     (url) => {
