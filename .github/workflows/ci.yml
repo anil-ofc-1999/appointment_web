@@ -1,5 +1,7 @@
 # Web CI — runs on every pull request to main and every push to main or develop.
 # Same commands as `npm run check` locally, so local and CI results match.
+# Jobs: unit tests + build, secret scan (gitleaks) and the full Playwright E2E suite
+# against the real API (checked out from the public API repo) and a throw-away PostgreSQL.
 name: CI
 
 on:
@@ -9,7 +11,7 @@ on:
     branches: [main, develop]
   workflow_dispatch:
 
-# Least privilege: this workflow only needs to read the code.
+# Least privilege: these jobs only need to read the code.
 permissions:
   contents: read
 
@@ -17,6 +19,9 @@ permissions:
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  GITLEAKS_VERSION: 8.30.1
 
 jobs:
   web:
@@ -51,3 +56,100 @@ jobs:
 
       - name: Security audit (production dependencies)
         run: npm audit --omit=dev --audit-level=high
+
+  secrets:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code (full history)
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install gitleaks (checksum verified)
+        run: |
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          file="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfLO "$base/$file"
+          curl -sSfL "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt" | grep " $file\$" | sha256sum -c -
+          tar -xzf "$file" gitleaks
+
+      - name: Scan every commit for secrets
+        run: ./gitleaks git . --redact --verbose --exit-code 1
+
+  e2e:
+    name: E2E - Playwright (real API + PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # Throw-away PostgreSQL 16 with test-only credentials; it exists only for this job.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: app_user
+          POSTGRES_PASSWORD: ci_test_password
+          POSTGRES_DB: appointments_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app_user -d appointments_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      CI: 'true'
+      API_DIR: api
+      DATABASE_URL: postgresql://app_user:ci_test_password@localhost:5432/appointments_e2e
+      # Test-only values for this throw-away environment.
+      JWT_SECRET: ci-e2e-only-secret-not-used-anywhere-else-0123456789
+      JWT_EXPIRES_IN: 1h
+      SEED_PASSWORD: Password123
+
+    steps:
+      - name: Checkout web
+        uses: actions/checkout@v5
+
+      # The API branch that matches this web branch: main for main / PRs to main, else develop.
+      - name: Checkout API
+        uses: actions/checkout@v5
+        with:
+          repository: anil-ofc-1999/automation-lifecycle-sample
+          ref: ${{ (github.base_ref || github.ref_name) == 'main' && 'main' || 'develop' }}
+          path: api
+
+      - name: Set up Node.js (version from .nvmrc)
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            api/package-lock.json
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: Install API dependencies, create tables and seed test data
+        working-directory: api
+        run: |
+          npm ci
+          npx prisma migrate deploy
+          npm run db:seed
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests (desktop + mobile)
+        run: npm run e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
