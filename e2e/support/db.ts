@@ -1,3 +1,4 @@
+import { createHash, randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -186,5 +187,38 @@ export function insertAppointment(
       ],
     );
     return res.rows[0].id;
+  });
+}
+
+/**
+ * D-37: creates a "forgot password" link for an e2e user straight in the database, the way
+ * the API does (only the SHA-256 of the token is stored). E2E runs do not really send
+ * emails, so this stands in for opening the email. Returns the token for the link.
+ */
+export function createResetLink(
+  email: string,
+  { minutesValid = 30 }: { minutesValid?: number } = {},
+): Promise<string> {
+  const token = randomBytes(32).toString('base64url');
+  const hash = createHash('sha256').update(token).digest('hex');
+  return withClient(async (client) => {
+    await client.query(
+      `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+       SELECT id, $2, now() + make_interval(mins => $3) FROM users WHERE email = $1`,
+      [email, hash, minutesValid],
+    );
+    return token;
+  });
+}
+
+/** D-37: how many still-usable reset links an e2e user has. */
+export function openResetLinks(email: string): Promise<number> {
+  return withClient(async (client) => {
+    const res = await client.query(
+      `SELECT count(*)::int AS n FROM password_reset_tokens t JOIN users u ON u.id = t.user_id
+       WHERE u.email = $1 AND t.used_at IS NULL AND t.expires_at > now()`,
+      [email],
+    );
+    return res.rows[0].n as number;
   });
 }

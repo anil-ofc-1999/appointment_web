@@ -10,6 +10,10 @@
     <p class="alert alert-info" role="status" data-testid="reason-message">
       Your session has expired. Please log in again.
     </p>
+  } @else if (reason() === 'password-reset') {
+    <p class="alert alert-success" role="status" data-testid="reason-message">
+      Your password has been changed. Please log in with the new password.
+    </p>
   } @else if (reason() === 'login-required') {
     <p class="alert alert-info" role="status" data-testid="reason-message">
       Please log in to continue.
@@ -51,6 +55,7 @@
       @if (fieldError('password'); as message) {
         <p id="login-password-error" class="field-error">{{ message }}</p>
       }
+      <p class="forgot"><a routerLink="/forgot-password">Forgot password?</a></p>
     </div>
 
     <button type="submit" class="btn btn-primary" [disabled]="submitting()">

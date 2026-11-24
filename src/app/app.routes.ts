@@ -18,6 +18,21 @@ export const routes: Routes = [
     title: 'Create account · Doctor Appointments',
   },
   {
+    // D-37: "forgot password" — ask for a link, then set a new password from it.
+    path: 'forgot-password',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./pages/forgot-password/forgot-password').then((m) => m.ForgotPassword),
+    title: 'Forgot password · Doctor Appointments',
+  },
+  {
+    path: 'reset-password',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./pages/reset-password/reset-password').then((m) => m.ResetPassword),
+    title: 'Set a new password · Doctor Appointments',
+  },
+  {
     // The API needs a login to list doctors.
     path: 'doctors',
     canActivate: [authGuard],

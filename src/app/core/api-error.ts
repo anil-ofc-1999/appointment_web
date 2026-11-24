@@ -23,6 +23,7 @@ const MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: 'Email or password is incorrect.',
   WRONG_PASSWORD: 'Your current password is incorrect.',
   USER_NOT_FOUND: 'No account with this email.',
+  INVALID_RESET_LINK: 'This reset link has expired or was already used. Please ask for a new one.',
   ACCOUNT_DISABLED: 'This account is disabled. Please contact the clinic.',
   EMAIL_TAKEN: 'An account with this email already exists. Try logging in instead.',
   TOO_MANY_REQUESTS: 'Too many attempts. Please wait a minute and try again.',
