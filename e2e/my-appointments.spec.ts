@@ -184,6 +184,9 @@ test.describe('My appointments — negative scenarios', () => {
     await loginAsNewPatient(page);
     const id = await bookAsMe(page, ids[DOC_B], clinicInstant(D4, '10:00'));
     await page.goto('/appointments');
+    // The list must be on screen BEFORE the "other tab" cancels; otherwise the page may
+    // load after the cancel and (correctly) show no Cancel button at all.
+    await expect(card(page, DOC_B).getByRole('button', { name: 'Cancel' })).toBeVisible();
 
     await page.request.post(`/api/v1/appointments/${id}/cancel`, {
       headers: { Authorization: `Bearer ${await myToken(page)}` },

@@ -251,6 +251,17 @@ describe('Admin — doctors (FR-2.2, FR-2.3)', () => {
     expect(s.button('Activate', card(s, 6))).toBeDefined();
   });
 
+  it('"Reset password" opens the Accounts tab with the doctor email (D-35)', async () => {
+    const s = await open();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    await s.click('Reset password', card(s, 5));
+
+    expect(navigate).toHaveBeenCalledWith([], {
+      queryParams: { tab: 'accounts', email: 'meera@example.com' },
+    });
+  });
+
   it('fees with paise show 2 decimals, whole fees none', async () => {
     const s = await open([adminDoctor(7, 'Dr. Paise', { fee: 725.5 }), MEERA]);
 

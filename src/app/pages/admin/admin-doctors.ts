@@ -1,6 +1,7 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { AdminDoctor, AdminService, DoctorChanges } from '../../core/admin/admin.service';
 import { parseApiError } from '../../core/api-error';
@@ -30,6 +31,12 @@ type DoctorField =
 export class AdminDoctors implements OnInit {
   private readonly admin = inject(AdminService);
   private readonly fb = inject(NonNullableFormBuilder);
+  private readonly router = inject(Router);
+
+  /** D-35: opens the Accounts tab with this doctor's login email filled in. */
+  protected resetPassword(d: AdminDoctor): void {
+    void this.router.navigate([], { queryParams: { tab: 'accounts', email: d.email } });
+  }
 
   protected readonly doctors = signal<AdminDoctor[]>([]);
   protected readonly specializations = signal<Specialization[]>([]);
