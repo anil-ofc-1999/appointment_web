@@ -72,6 +72,20 @@ describe('Login page — rendering & accessibility', () => {
     expect(page.el.querySelector('#login-password')?.getAttribute('type')).toBe('password');
   });
 
+  it('has a "Forgot password?" link (D-37)', async () => {
+    const page = await render();
+
+    expect(page.el.querySelector('a[href="/forgot-password"]')?.textContent).toContain(
+      'Forgot password?',
+    );
+  });
+
+  it('after a password reset: says the password was changed', async () => {
+    const page = await render({ reason: 'password-reset' });
+
+    expect(page.text('[data-testid="reason-message"]')).toContain('password has been changed');
+  });
+
   it('links to the register page', async () => {
     const page = await render();
 

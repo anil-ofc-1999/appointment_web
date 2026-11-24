@@ -65,6 +65,20 @@ export class AuthService {
     this.save({ accessToken: res.accessToken, expiresAt, user: res.user });
   }
 
+  /** D-37: emails a reset link if the account exists (the answer is always the same). */
+  forgotPassword(email: string): Observable<void> {
+    return this.http
+      .post<{ message: string }>('/api/v1/auth/forgot-password', { email })
+      .pipe(map(() => undefined));
+  }
+
+  /** D-37: sets a new password with the token from the emailed link. Does not log in. */
+  resetPassword(token: string, newPassword: string): Observable<void> {
+    return this.http
+      .post<{ message: string }>('/api/v1/auth/reset-password', { token, newPassword })
+      .pipe(map(() => undefined));
+  }
+
   logout(): void {
     this.save(null);
   }

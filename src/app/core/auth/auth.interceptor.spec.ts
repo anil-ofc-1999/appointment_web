@@ -61,6 +61,17 @@ describe('authInterceptor (FR-1.7)', () => {
     );
   });
 
+  it.each(['/api/v1/auth/forgot-password', '/api/v1/auth/reset-password'])(
+    'never sends the token to %s (public, D-37)',
+    (url) => {
+      const { http, backend } = setup({ loggedIn: true });
+
+      http.post(url, {}).subscribe();
+
+      expect(backend.expectOne(url).request.headers.has('Authorization')).toBe(false);
+    },
+  );
+
   it('DOES send the token to change-password (it needs the logged-in user)', () => {
     const { http, backend } = setup({ loggedIn: true });
 
