@@ -262,6 +262,63 @@ describe('Admin — doctors (FR-2.2, FR-2.3)', () => {
     });
   });
 
+  it('"Working hours" loads and saves the schedule of that doctor via the admin API (D-36)', async () => {
+    const s = await open();
+
+    await s.click('Working hours', card(s, 5));
+    s.http
+      .expectOne('/api/v1/doctors/5/schedule')
+      .flush({ blocks: [{ id: 1, dayOfWeek: 1, startTime: '09:00', endTime: '12:00' }] });
+    await s.stable();
+
+    const panel = card(s, 5).querySelector<HTMLElement>('[data-testid="hours-panel"]')!;
+    expect(panel.textContent).toContain('Working hours — Dr. Meera');
+    expect(panel.querySelectorAll('[data-testid="block"]')).toHaveLength(1);
+
+    await s.click('Add', panel); // default new block: Monday 10:00–13:00 overlaps 09:00–12:00
+    expect(panel.querySelector('[data-testid="block-error"]')?.textContent).toContain('overlaps');
+
+    panel.querySelector<HTMLButtonElement>('[aria-label="Remove Monday 09:00 to 12:00"]')?.click();
+    await s.stable();
+    await s.click('Add', panel);
+    await s.click('Save schedule', panel);
+    const req = s.http.expectOne('/api/v1/doctors/5/schedule');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({
+      blocks: [{ dayOfWeek: 1, startTime: '10:00', endTime: '13:00' }],
+    });
+    req.flush({ blocks: [{ id: 2, dayOfWeek: 1, startTime: '10:00', endTime: '13:00' }] });
+    await s.stable();
+    expect(panel.querySelector('[data-testid="schedule-message"]')?.textContent).toContain(
+      'Schedule saved',
+    );
+  });
+
+  it('"Close working hours" hides the panel; opening Edit closes it too', async () => {
+    const s = await open();
+    await s.click('Working hours', card(s, 5));
+    s.http.expectOne('/api/v1/doctors/5/schedule').flush({ blocks: [] });
+    await s.stable();
+
+    await s.click('Close working hours', card(s, 5));
+    expect(card(s, 5).querySelector('[data-testid="hours-panel"]')).toBeNull();
+
+    await s.click('Working hours', card(s, 5));
+    s.http.expectOne('/api/v1/doctors/5/schedule').flush({ blocks: [] });
+    await s.stable();
+    await s.click('Edit', card(s, 5));
+    expect(card(s, 5).querySelector('[data-testid="hours-panel"]')).toBeNull();
+  });
+
+  it('a schedule that fails to load says so for this doctor', async () => {
+    const s = await open();
+    await s.click('Working hours', card(s, 5));
+    s.http.expectOne('/api/v1/doctors/5/schedule').flush('x', { status: 500, statusText: 'E' });
+    await s.stable();
+
+    expect(s.text('schedule-load-error')).toContain("Could not load this doctor's schedule");
+  });
+
   it('fees with paise show 2 decimals, whole fees none', async () => {
     const s = await open([adminDoctor(7, 'Dr. Paise', { fee: 725.5 }), MEERA]);
 

@@ -35,8 +35,7 @@
 }
 
 .day-bar,
-.add-leave,
-.add-block {
+.add-leave {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -44,45 +43,6 @@
 
   .field {
     margin-bottom: 0;
-  }
-}
-
-.add-block {
-  // A fieldset will not shrink below its content by default; on phones it then
-  // overflowed and covered the Save / Discard buttons.
-  min-width: 0;
-  margin: 1rem 0;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-
-  .field {
-    flex: 1 1 8rem;
-    min-width: 0;
-  }
-
-  select,
-  input {
-    width: 100%;
-    min-width: 0;
-  }
-
-  // Phones: one field per row, so a wide native time input never overlaps the buttons.
-  @media (width <= 640px) {
-    flex-direction: column;
-    align-items: stretch;
-
-    .field {
-      flex: none;
-    }
-  }
-
-  legend {
-    font-weight: 600;
-  }
-
-  .field-error {
-    flex-basis: 100%;
   }
 }
 
@@ -131,7 +91,6 @@ select {
   }
 }
 
-.week,
 .leave-list {
   display: grid;
   gap: 0.5rem;
@@ -159,20 +118,6 @@ select {
   li {
     justify-content: space-between;
   }
-}
-
-.block {
-  padding: 0.125rem 0.5rem;
-  border-radius: 4px;
-  background: #e8f1fb;
-}
-
-.save-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.75rem;
 }
 
 .empty {

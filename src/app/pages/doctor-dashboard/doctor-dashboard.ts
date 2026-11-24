@@ -6,10 +6,10 @@ import { Subject, catchError, combineLatest, of, startWith, switchMap, tap } fro
 import { parseApiError } from '../../core/api-error';
 import { Appointment } from '../../core/appointments/appointment.models';
 import { addDays, clinicToday, formatLongDate, isValidDate } from '../../core/clinic-date';
-import { DoctorSelfService, ScheduleBlock, WEEKDAYS } from '../../core/doctors/doctor-self.service';
+import { DoctorSelfService } from '../../core/doctors/doctor-self.service';
+import { ScheduleEditor, ScheduleSource } from '../../shared/schedule-editor/schedule-editor';
 
 type Tab = 'appointments' | 'schedule' | 'leaves';
-const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const STATUS_LABELS: Record<Appointment['status'], string> = {
   BOOKED: 'Booked',
@@ -21,6 +21,7 @@ const STATUS_LABELS: Record<Appointment['status'], string> = {
 /** Screen 6 (REQUIREMENTS §8): Doctor dashboard — FR-6.2, FR-5.4, FR-3.1 to FR-3.3. */
 @Component({
   selector: 'app-doctor-dashboard',
+  imports: [ScheduleEditor],
   templateUrl: './doctor-dashboard.html',
   styleUrl: './doctor-dashboard.scss',
 })
@@ -32,12 +33,6 @@ export class DoctorDashboard implements OnInit {
   readonly tab = input<string>();
   readonly date = input<string>();
 
-  protected readonly weekdays = WEEKDAYS;
-  /** Times for the schedule editor in 15-minute steps (dropdowns work better on phones). */
-  protected readonly times = Array.from({ length: 96 }, (_, i) => {
-    const minutes = i * 15;
-    return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
-  });
   protected readonly today = clinicToday();
   protected readonly activeTab = computed<Tab>(() =>
     this.tab() === 'schedule' || this.tab() === 'leaves' ? (this.tab() as Tab) : 'appointments',
@@ -59,30 +54,11 @@ export class DoctorDashboard implements OnInit {
     () => this.dayItems().filter((a) => a.status === 'BOOKED').length,
   );
 
-  // ----- weekly schedule -----
-  protected readonly blocks = signal<ScheduleBlock[]>([]);
-  protected readonly scheduleState = signal<'loading' | 'loaded' | 'error'>('loading');
-  protected readonly scheduleMessage = signal<{ kind: 'success' | 'error'; text: string } | null>(
-    null,
-  );
-  protected readonly savingSchedule = signal(false);
-  protected readonly dirty = signal(false);
-  protected readonly newBlock = signal<ScheduleBlock>({
-    dayOfWeek: 1,
-    startTime: '10:00',
-    endTime: '13:00',
-  });
-  protected readonly newBlockError = signal<string | null>(null);
-  protected readonly blocksByDay = computed(() =>
-    WEEKDAYS.map((name, dayOfWeek) => ({
-      name,
-      dayOfWeek,
-      blocks: this.blocks()
-        .map((b, index) => ({ ...b, index }))
-        .filter((b) => b.dayOfWeek === dayOfWeek)
-        .sort((a, b) => a.startTime.localeCompare(b.startTime)),
-    })),
-  );
+  /** The doctor's own weekly hours for the shared editor (FR-3.1). */
+  protected readonly ownSchedule: ScheduleSource = {
+    load: () => this.api.schedule(),
+    save: (blocks) => this.api.saveSchedule(blocks),
+  };
 
   // ----- leave days -----
   protected readonly leaves = signal<string[]>([]);
@@ -107,7 +83,6 @@ export class DoctorDashboard implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadSchedule();
     this.loadLeaves();
   }
 
@@ -173,90 +148,6 @@ export class DoctorDashboard implements OnInit {
         return of(null);
       }),
     );
-  }
-
-  // ----- schedule -----
-
-  protected loadSchedule(): void {
-    this.scheduleState.set('loading');
-    this.api.schedule().subscribe({
-      next: (blocks) => {
-        this.blocks.set(blocks);
-        this.dirty.set(false);
-        this.scheduleState.set('loaded');
-      },
-      error: () => this.scheduleState.set('error'),
-    });
-  }
-
-  protected setNewBlock(field: keyof ScheduleBlock, value: string): void {
-    this.newBlock.update((b) => ({ ...b, [field]: field === 'dayOfWeek' ? Number(value) : value }));
-    this.newBlockError.set(null);
-  }
-
-  /** Adds the block locally after checking it; "Save schedule" sends everything. */
-  protected addBlock(): void {
-    const block = this.newBlock();
-    if (!TIME.test(block.startTime) || !TIME.test(block.endTime)) {
-      this.newBlockError.set('Use times like 09:30 (24-hour).');
-      return;
-    }
-    if (block.endTime <= block.startTime) {
-      this.newBlockError.set('End time must be after start time.');
-      return;
-    }
-    const overlaps = this.blocks().some(
-      (b) =>
-        b.dayOfWeek === block.dayOfWeek &&
-        block.startTime < b.endTime &&
-        b.startTime < block.endTime,
-    );
-    if (overlaps) {
-      this.newBlockError.set(`This overlaps another block on ${WEEKDAYS[block.dayOfWeek]}.`);
-      return;
-    }
-    this.blocks.update((list) => [...list, { ...block }]);
-    this.dirty.set(true);
-    this.scheduleMessage.set(null);
-  }
-
-  protected removeBlock(index: number): void {
-    this.blocks.update((list) => list.filter((_, i) => i !== index));
-    this.dirty.set(true);
-    this.scheduleMessage.set(null);
-  }
-
-  protected saveSchedule(): void {
-    if (this.savingSchedule()) return;
-    this.savingSchedule.set(true);
-    this.scheduleMessage.set(null);
-    this.api.saveSchedule(this.blocks()).subscribe({
-      next: (saved) => {
-        this.savingSchedule.set(false);
-        this.blocks.set(saved);
-        this.dirty.set(false);
-        this.scheduleMessage.set({
-          kind: 'success',
-          text: 'Schedule saved. Existing bookings are kept.',
-        });
-      },
-      error: (err: unknown) => {
-        this.savingSchedule.set(false);
-        const parsed = parseApiError(err);
-        this.scheduleMessage.set({
-          kind: 'error',
-          text:
-            parsed.code === 'SCHEDULE_OVERLAP'
-              ? 'Some blocks on the same day overlap. Please fix them and save again.'
-              : parsed.message,
-        });
-      },
-    });
-  }
-
-  protected discardChanges(): void {
-    this.scheduleMessage.set(null);
-    this.loadSchedule();
   }
 
   // ----- leaves -----

@@ -207,10 +207,26 @@
                 >
                   {{ d.isActive ? 'Deactivate' : 'Activate' }}
                 </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [attr.aria-expanded]="hours()?.id === d.id"
+                  (click)="toggleHours(d)"
+                >
+                  {{ hours()?.id === d.id ? 'Close working hours' : 'Working hours' }}
+                </button>
                 <button type="button" class="btn btn-secondary" (click)="resetPassword(d)">
                   Reset password
                 </button>
               </div>
+              @if (hours(); as h) {
+                @if (h.id === d.id) {
+                  <div class="hours-panel" data-testid="hours-panel">
+                    <h3>Working hours — {{ d.name }}</h3>
+                    <app-schedule-editor [source]="h.source" whose="this doctor's" />
+                  </div>
+                }
+              }
             }
           </li>
         }
