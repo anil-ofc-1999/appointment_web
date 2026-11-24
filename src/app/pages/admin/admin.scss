@@ -212,3 +212,14 @@ textarea {
 .account-form {
   max-width: 26rem;
 }
+
+.hours-panel {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--color-border);
+
+  h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+  }
+}

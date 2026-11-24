@@ -14,6 +14,7 @@ import {
 } from '../../core/auth/validators';
 import { Specialization } from '../../core/doctors/doctor.models';
 import { PasswordToggle } from '../../shared/password-toggle';
+import { ScheduleEditor, ScheduleSource } from '../../shared/schedule-editor/schedule-editor';
 
 /** Fee: 0 or more, at most 2 decimals (same as the API). */
 const FEE = /^\d{1,8}(\.\d{1,2})?$/;
@@ -24,7 +25,7 @@ type DoctorField =
 /** FR-2.2 create / edit doctors, FR-2.3 activate / deactivate. */
 @Component({
   selector: 'app-admin-doctors',
-  imports: [ReactiveFormsModule, CurrencyPipe, PasswordToggle],
+  imports: [ReactiveFormsModule, CurrencyPipe, PasswordToggle, ScheduleEditor],
   templateUrl: './admin-doctors.html',
   styleUrl: './admin.scss',
 })
@@ -32,6 +33,25 @@ export class AdminDoctors implements OnInit {
   private readonly admin = inject(AdminService);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly router = inject(Router);
+
+  // ----- working hours (D-36) -----
+  /** The doctor whose weekly hours are open, with the editor's data source. */
+  protected readonly hours = signal<{ id: number; source: ScheduleSource } | null>(null);
+
+  protected toggleHours(d: AdminDoctor): void {
+    if (this.hours()?.id === d.id) {
+      this.hours.set(null);
+      return;
+    }
+    this.editingId.set(null);
+    this.hours.set({
+      id: d.id,
+      source: {
+        load: () => this.admin.doctorSchedule(d.id),
+        save: (blocks) => this.admin.saveDoctorSchedule(d.id, blocks),
+      },
+    });
+  }
 
   /** D-35: opens the Accounts tab with this doctor's login email filled in. */
   protected resetPassword(d: AdminDoctor): void {
@@ -160,6 +180,7 @@ export class AdminDoctors implements OnInit {
   }
 
   protected startEdit(d: AdminDoctor): void {
+    this.hours.set(null);
     this.notice.set(null);
     this.editSubmitted.set(false);
     this.editingId.set(d.id);

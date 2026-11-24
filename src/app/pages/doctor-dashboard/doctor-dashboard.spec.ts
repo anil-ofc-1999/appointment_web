@@ -73,7 +73,8 @@ async function open(url = '/dashboard') {
       leaves: string[] = ['2030-01-20'],
     ) {
       http.expectOne((r) => r.url === '/api/v1/appointments/me').flush({ date: TODAY, items });
-      http.expectOne('/api/v1/doctors/me/schedule').flush({ blocks });
+      // The schedule editor only loads when the "Weekly schedule" tab is open.
+      http.match('/api/v1/doctors/me/schedule').forEach((r) => r.flush({ blocks }));
       http
         .expectOne('/api/v1/doctors/me/leaves')
         .flush({ items: leaves.map((date) => ({ date })) });
@@ -506,7 +507,7 @@ describe('Dashboard — leave days (FR-3.3)', () => {
   it('leaves fail to load: error and "Try again"', async () => {
     const screen = await open('/dashboard?tab=leaves');
     screen.dayRequest().flush({ date: TODAY, items: [] });
-    screen.http.expectOne('/api/v1/doctors/me/schedule').flush({ blocks: [] });
+    screen.http.expectNone('/api/v1/doctors/me/schedule'); // not on the schedule tab
     screen.http.expectOne('/api/v1/doctors/me/leaves').flush('x', { status: 500, statusText: 'E' });
     await screen.stable();
 

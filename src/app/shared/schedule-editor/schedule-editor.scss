@@ -1,0 +1,93 @@
+.muted {
+  color: var(--color-muted);
+}
+
+.inline {
+  width: auto;
+}
+
+.add-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  // A fieldset will not shrink below its content by default; on phones it then
+  // overflowed and covered the Save / Discard buttons.
+  min-width: 0;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+
+  .field {
+    flex: 1 1 8rem;
+    min-width: 0;
+    margin-bottom: 0;
+  }
+
+  select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  // Phones: one field per row, so a wide select never overlaps the buttons.
+  @media (width <= 640px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    .field {
+      flex: none;
+    }
+  }
+
+  legend {
+    font-weight: 600;
+  }
+
+  .field-error {
+    flex-basis: 100%;
+  }
+}
+
+select {
+  padding: 0.5rem 0.625rem;
+  font: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg);
+}
+
+.week {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+  }
+
+  strong {
+    min-width: 7rem;
+  }
+}
+
+.block {
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  background: #e8f1fb;
+}
+
+.save-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}

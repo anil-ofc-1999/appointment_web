@@ -4,6 +4,7 @@ import { Observable, map } from 'rxjs';
 
 import { Appointment, AppointmentStatus } from '../appointments/appointment.models';
 import { User } from '../auth/auth.models';
+import { ScheduleBlock } from '../doctors/doctor-self.service';
 import { Doctor, Page, Specialization } from '../doctors/doctor.models';
 
 /** Doctor as the admin sees it (FR-2.2, FR-2.3): with login email and account status. */
@@ -52,6 +53,26 @@ export class AdminService {
     return this.http
       .post<{ user: User }>('/api/v1/users/reset-password', { email, newPassword })
       .pipe(map((res) => res.user));
+  }
+
+  /** D-36: a doctor's weekly hours (same rules as the doctor's own editor). */
+  doctorSchedule(doctorId: number): Observable<ScheduleBlock[]> {
+    return this.http
+      .get<{ blocks: ScheduleBlock[] }>(`/api/v1/doctors/${doctorId}/schedule`)
+      .pipe(map((res) => res.blocks));
+  }
+
+  saveDoctorSchedule(doctorId: number, blocks: ScheduleBlock[]): Observable<ScheduleBlock[]> {
+    const body = {
+      blocks: blocks.map(({ dayOfWeek, startTime, endTime }) => ({
+        dayOfWeek,
+        startTime,
+        endTime,
+      })),
+    };
+    return this.http
+      .put<{ blocks: ScheduleBlock[] }>(`/api/v1/doctors/${doctorId}/schedule`, body)
+      .pipe(map((res) => res.blocks));
   }
 
   /** All doctors including inactive ones (one page of up to 50). */
